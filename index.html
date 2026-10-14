@@ -186,7 +186,6 @@ function placeRock(x,y){if(rocks.length>=80)return;const tx=Math.floor(x/TILE),t
 function breed(p1,p2){const child=makeBeing((p1.x+p2.x)/2,(p1.y+p2.y)/2,p1.type,true,Math.random()<.5?0:1);if(!child)return;for(let i=0;i<6;i++)hearts.push({x:child.x+rnd(-10,10),y:child.y-5+rnd(-5,5),vx:rnd(-25,25),vy:rnd(-70,-35),life:1.2,maxLife:1.2,size:8+Math.random()*4,color:p1.clan===0?'#ff7aaa':'#c89aff'});p1.breedCd=BREED_COOLDOWN;p2.breedCd=BREED_COOLDOWN;}
 function findPartner(u){let best=null,bd=BREED_DISTANCE;for(const o of beings){if(o===u||o.clan!==u.clan||o.isBaby||o.gender===u.gender)continue;if(o.breedCd>0||u.breedCd>0)continue;const d=Math.hypot(o.x-u.x,o.y-u.y);if(d<bd){bd=d;best=o;}}return best;}
 function findNearestMountain(x,y,maxDist){const tx0=Math.floor(x/TILE),ty0=Math.floor(y/TILE),r=Math.ceil(maxDist/TILE);let best=null,bd=maxDist;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const tx=tx0+dx,ty=ty0+dy;if(tx<0||tx>=COLS||ty<0||ty>=ROWS)continue;const idx=ty*COLS+tx,t=tiles[idx];if(t!==2&&t!==6&&t!==7)continue;if(mountainHP[idx]<=0)continue;const cx=tx*TILE+TILE/2,cy=ty*TILE+TILE/2,d=Math.hypot(cx-x,cy-y);if(d<bd){bd=d;best={tx,ty,idx,x:cx,y:cy,type:t};}}return best;}
-//===== LIGHTNING =====
 function generateBoltPath(x1,y1,x2,y2,segments){
 const points=[{x:x1,y:y1}];const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy);
 const perpX=-dy/Math.max(.01,len),perpY=dx/Math.max(.01,len);
@@ -226,7 +225,6 @@ if(madeHole){flowDepth[i]=0;burnTimer[i]=0;
 for(let k=0;k<30;k++)sparks.push({x:x+rnd(-15,15),y:y+rnd(-15,15),vx:rnd(-200,200),vy:rnd(-250,-50),life:1,maxLife:1,c:Math.random()<.5?'#a87a4a':'#6a4a2a',s:4});}}
 for(let i=0;i<35;i++)sparks.push({x,y,vx:rnd(-280,280),vy:rnd(-280,280),life:.7,maxLife:.7,c:Math.random()<.5?'#f0e05a':'#ffffff',s:4});}
 function tickBolts(dt){for(let i=bolts.length-1;i>=0;i--){bolts[i].life-=dt;if(bolts[i].life<=0)bolts.splice(i,1);}}
-//===== FLOW =====
 function tickFlow(dt){
 flowAccum+=dt;if(flowAccum<FLOW_INTERVAL)return;flowAccum=0;
 const rockSet=new Set();
@@ -240,7 +238,6 @@ for(let i=0;i<tiles.length;i++){const t=tiles[i];if(t!==1&&t!==4)continue;if(flo
 const x=i%COLS,y=Math.floor(i/COLS);
 for(const[ddx,ddy]of[[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+ddx,ny=y+ddy;if(nx<0||nx>=COLS||ny<0||ny>=ROWS)continue;const ni=ny*COLS+nx;if(rockSet.has(ni))continue;const nt=tiles[ni];if(nt!==0&&nt!==3&&nt!==5)continue;const chance=t===1?WATER_SPREAD:LAVA_SPREAD;if(Math.random()<chance)toConvert.push({i:ni,t,d:flowDepth[i]+1});}}
 for(const c of toConvert){const cur=tiles[c.i];if(cur!==0&&cur!==3&&cur!==5)continue;tiles[c.i]=c.t;flowDepth[c.i]=c.d;burnTimer[c.i]=0;}}
-//===== INSPECTION =====
 function findObjectAt(wx,wy){
 for(let i=beings.length-1;i>=0;i--){const u=beings[i],s=u.size*(u.isBaby?.75:1),r=u.type==='beast'?s*1.7:s*1.5;if(Math.hypot(u.x-wx,u.y-wy)<r)return{type:'being',ref:u};}
 for(let i=builds.length-1;i>=0;i--){const b=builds[i],L=BUILD_LEVELS[b.type][b.level-1];const hw=(b.type==='warehouse'?L.w*1.1:TILE*2.2)/2,hh=(b.type==='warehouse'?L.h*1.1:TILE*2.0)/2;if(Math.abs(b.x-wx)<hw&&Math.abs(b.y-wy)<hh)return{type:'build',ref:b};}
@@ -299,7 +296,6 @@ const rows=[['🪨 Прочность',Math.ceil(r.hp)+' / '+r.maxHp],['⛏️ �
 ctx.font='12px -apple-system,sans-serif';
 for(const[k,v]of rows){ctx.fillStyle='rgba(190,170,240,0.85)';ctx.fillText(k,cx,cy);if(v){ctx.textAlign='right';ctx.fillStyle='#fff';ctx.fillText(String(v),px+pw-14,cy);ctx.textAlign='left';}cy+=17;}}
 ctx.textBaseline='alphabetic';}
-//===== SIMULATION =====
 function tickBeings(dt){
 const popCap={0:getPopulationCap(0),1:getPopulationCap(1)},popCount={0:getPopulationCount(0),1:getPopulationCount(1)};
 for(const u of beings){
@@ -482,8 +478,6 @@ case'troll':makeBeing(px,py,'troll');break;
 case'beast':makeBeing(px,py,'beast');break;
 case'shadow':makeBeing(px,py,'shadow');break;
 case'bolt':strikeBolt(px,py);break;}}
-
-//===== RENDER WORLD =====
 function renderWorld(){
 const bgGrad=ctx.createLinearGradient(0,0,0,VIEW_H);
 bgGrad.addColorStop(0,'#1a1030');bgGrad.addColorStop(1,'#2a1a4a');
@@ -914,7 +908,7 @@ ctx.fillStyle=fl?'#ddd':L.roofDark;ctx.beginPath();ctx.moveTo(roofTipX,actualTip
 if(b.hp<b.maxHp){const bw=w,bh=3,by=y-actualRoofH-8;
 ctx.fillStyle='rgba(0,0,0,0.75)';ctx.fillRect(x-1,by-1,bw+2,bh+2);
 const r=b.hp/b.maxHp;ctx.fillStyle=r>.5?'#4aff6a':r>.25?'#f0e05a':'#ff4a5a';ctx.fillRect(x,by,bw*r,bh);}}
-//===== UI =====
+
 function paintUI(){
 if(!hideBar){
 const pg=ctx.createLinearGradient(0,VIEW_H,0,ch);pg.addColorStop(0,'#2a1a4a');pg.addColorStop(1,'#1a0f30');
@@ -998,7 +992,6 @@ const tools=getTools(),cols=6,rows=Math.ceil(tools.length/6),pad=6;
 const availH=UIH-(top-VIEW_H)-pad,bw=(cw-pad*(cols+1))/cols,bh=(availH-pad*(rows+1))/rows;
 for(let i=0;i<tools.length;i++){const r=Math.floor(i/cols),c=i%cols,bx=pad+c*(bw+pad),by=top+pad+r*(bh+pad);
 if(x>=bx&&x<=bx+bw&&y>=by&&y<=by+bh)return i;}return-1;}
-//===== SETTINGS MENU =====
 function renderSettings(){
 const g=ctx.createLinearGradient(0,0,0,ch);g.addColorStop(0,'#1e1440');g.addColorStop(.35,'#2a1a4a');g.addColorStop(.7,'#1a0f30');g.addColorStop(1,'#0a0618');
 ctx.fillStyle=g;ctx.fillRect(0,0,cw,ch);
@@ -1086,7 +1079,6 @@ const gridY=labelY+26,infoY=gridY+rows*cardH+(rows-1)*cardGap+20;
 const btnY=infoY+10,btnH=58;
 const rsW=Math.min(200,cw-80),rsH=40,rsX=(cw-rsW)/2,rsY=btnY+btnH+14;
 return x>=rsX&&x<=rsX+rsW&&y>=rsY&&y<=rsY+rsH;}
-//===== INPUT =====
 const touches=new Map();let pinchDist=0,pinchZoom=1;
 function onStart(t){
 if(appState==='settings'){
@@ -1190,6 +1182,15 @@ tickBeings(dt);tickBuilds(dt);tickTrees(dt);tickFire(dt);tickFlow(dt);tickSparks
 renderWorld();paintUI();}
 function initCanvas(){cw=canvas.width=window.innerWidth;ch=canvas.height=window.innerHeight;recalcView();if(!tileCache.grass)prerenderTiles();}
 initCanvas();setupInput();requestAnimationFrame(loop);
+
+// ==================== SERVICE WORKER (офлайн-режим) ====================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('SW зарегистрирован!'))
+      .catch(err => console.log('Ошибка SW:', err));
+  });
+}
 </script>
 </body>
 </html>
