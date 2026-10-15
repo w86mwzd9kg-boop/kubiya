@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#1a1030">
-<title>Кубия 2.0</title>
+<title>Кубия 2.1</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:-apple-system,'Trebuchet MS',sans-serif;color:#fff;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;position:fixed;top:0;left:0}
@@ -17,6 +17,14 @@ canvas{display:block;position:absolute;top:0;left:0}
 <canvas id="game"></canvas>
 <script>
 var CHANGELOG=[
+{version:'2.1.0',date:'15.10.2026',title:'Стабильность и исправления',changes:[
+{t:'fix',text:'Тролли строят свои склады, а не людские'},
+{t:'fix',text:'Искры от молний больше не удваиваются'},
+{t:'fix',text:'Существа не ходят по горам и по лаве'},
+{t:'fix',text:'Маленькие существа создаются корректно'},
+{t:'imp',text:'При смене вкладки инструмент сбрасывается на первый доступный'},
+{t:'imp',text:'Проверка края мира в генерации озёр'}
+]},
 {version:'2.0.0',date:'15.10.2026',title:'Оружие в руках и два биома',changes:[
 {t:'new',text:'Топор в руках при рубке дерева'},
 {t:'new',text:'Кирка при добыче камня и гор'},
@@ -37,7 +45,7 @@ var CHANGELOG=[
 ]}
 ];
 var APP_VERSION=CHANGELOG[0].version;
-var VERSION_KEY='kubiya_version_v2',DATES_KEY='kubiya_dates_v2',SEEN_HISTORY_KEY='kubiya_seen_history_v2';
+var VERSION_KEY='kubiya_version_v3',DATES_KEY='kubiya_dates_v2',SEEN_HISTORY_KEY='kubiya_seen_history_v2';
 var CHANGE_META={new:{label:'НОВОЕ',color:'#4aff6a',icon:'✨'},fix:{label:'ИСПРАВЛЕНО',color:'#ff6a6a',icon:'🔧'},imp:{label:'УЛУЧШЕНО',color:'#4adfff',icon:'⚡'},bal:{label:'БАЛАНС',color:'#ffd94a',icon:'⚖️'}};
 function loadDates(){try{return JSON.parse(localStorage.getItem(DATES_KEY)||'{}');}catch(e){return {};}}
 function saveDates(d){try{localStorage.setItem(DATES_KEY,JSON.stringify(d));}catch(e){}}
@@ -72,7 +80,6 @@ var TABS=[{id:'world',name:'Мир',ic:'🌍'},{id:'life',name:'Жизнь',ic:'
 var TOOLS_WORLD=[{id:'grass',name:'Луга',bg:'#3d8b47',ic:'🌿'},{id:'forestfloor',name:'Подстилка',bg:'#3a5a2a',ic:'🍂'},{id:'snow',name:'Снег',bg:'#8fa8c0',ic:'❄️'},{id:'water',name:'Вода',bg:'#2f6bb5',ic:'💧'},{id:'rock',name:'Горы',bg:'#6b6b7a',ic:'⛰️'},{id:'boulder',name:'Валун',bg:'#7a7a88',ic:'🪨'},{id:'sand',name:'Песок',bg:'#c9a961',ic:'🏖️'},{id:'flame',name:'Огонь',bg:'#d95a2b',ic:'🔥'},{id:'oak',name:'Дуб',bg:'#4a7a3a',ic:'🌳'},{id:'pine',name:'Ель',bg:'#2a5a3a',ic:'🌲'},{id:'birch',name:'Берёза',bg:'#7a9a5a',ic:'🌳'},{id:'palm',name:'Пальма',bg:'#5a8a4a',ic:'🌴'},{id:'dead',name:'Сухое',bg:'#5a4a3a',ic:'🪵'}];
 var TOOLS_LIFE=[{id:'human',name:'Человек',bg:'#3a8ee6',ic:'🧑'},{id:'troll',name:'Тролли',bg:'#7a5cc9',ic:'👾'},{id:'beast',name:'Медведи',bg:'#8a5a2a',ic:'🐻'},{id:'shadow',name:'Тени',bg:'#4a3a6a',ic:'👤'},{id:'bolt',name:'Молния',bg:'#e6c93a',ic:'⚡'},{id:'remove',name:'Убрать',bg:'#5a3a4a',ic:'✖'}];
 function getTools(){return activeTab==='world'?TOOLS_WORLD:TOOLS_LIFE;}
-// ✅ ИСПРАВЛЕНО: гора (2) и лава (4) теперь непроходимы
 var WALKABLE=[true,false,false,true,false,true,true,true,true,true];
 var BEING={human:{clan:0,hp:55,size:8,skin:'#e8c9a0',cloth:'#a89878',clothDark:'#8a7a58',hair:'#b8b8b8',speed:58,dmg:9,buildType:'cottage',weapon:'axe'},troll:{clan:1,hp:70,size:9,skin:'#9a8a6a',cloth:'#5a3a9a',clothDark:'#3a2a6a',hair:'#1a0e2a',speed:52,dmg:11,buildType:'tent',weapon:'club'},beast:{clan:2,hp:95,size:11,skin:'#8a5a2a',cloth:'#3a2010',clothDark:'#1a0e05',hair:'#2a1a0a',speed:70,dmg:14,buildType:null,weapon:null},shadow:{clan:3,hp:130,size:11,skin:'#4a3a6a',cloth:'#2a1a3a',clothDark:'#0a0515',hair:'#050208',speed:45,dmg:16,buildType:null,weapon:null}};
 var BUILD_LEVELS={cottage:[{w:TILE*1.7,h:TILE*1.7,hp:260,spawnEvery:45,capacity:4},{w:TILE*2.2,h:TILE*2.2,hp:550,spawnEvery:30,capacity:7},{w:TILE*2.8,h:TILE*2.8,hp:1000,spawnEvery:18,capacity:12}],tent:[{w:TILE*1.7,h:TILE*1.7,hp:210,spawnEvery:45,capacity:4},{w:TILE*2.2,h:TILE*2.2,hp:450,spawnEvery:30,capacity:7},{w:TILE*2.8,h:TILE*2.8,hp:850,spawnEvery:18,capacity:12}],warehouse:[{w:TILE*2.4,h:TILE*2.0,hp:400,spawnEvery:60,capacity:3},{w:TILE*3.0,h:TILE*2.4,hp:800,spawnEvery:45,capacity:5},{w:TILE*3.6,h:TILE*2.8,hp:1500,spawnEvery:30,capacity:8}]};
@@ -234,7 +241,6 @@ function addBeaches(){var tc=[];for(var y=0;y<ROWS;y++){for(var x=0;x<COLS;x++){
 function hasNear(x,y,v){for(var dy=-1;dy<=1;dy++){for(var dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;var nx=x+dx,ny=y+dy;if(nx>=0&&nx<COLS&&ny>=0&&ny<ROWS&&tiles[ny*COLS+nx]===v)return true;}}return false;}
 
 function makeBeing(x,y,type,isBaby,gender){
-// ✅ ИСПРАВЛЕНО: обрабатываем null так же, как undefined
 if(isBaby===undefined||isBaby===null)isBaby=false;
 if(beings.length>=150)return null;
 var t=BEING[type];
@@ -247,7 +253,6 @@ function walkable(x,y){var tx=Math.floor(x/TILE),ty=Math.floor(y/TILE);if(tx<0||
 function canBuild(x,y,clan){for(var i=0;i<builds.length;i++){var b=builds[i];if(b.clan!==clan)continue;if(Math.hypot(b.x-x,b.y-y)<TILE*5)return false;}if(!walkable(x,y))return false;if(x<TILE||x>WORLD_W-TILE||y<TILE||y>WORLD_H-TILE)return false;return true;}
 function getPopulationCap(clan){var cap=0;for(var i=0;i<builds.length;i++){var b=builds[i];if(b.clan!==clan||b.type==='warehouse')continue;cap+=BUILD_LEVELS[b.type][b.level-1].capacity;}return cap;}
 function getPopulationCount(clan){var n=0;for(var i=0;i<beings.length;i++){var u=beings[i];if(u.clan===clan&&u.type!=='beast'&&u.type!=='shadow')n++;}return n;}
-// ✅ ИСПРАВЛЕНО: placeBuild принимает клан явно — тролли строят свои склады
 function placeBuild(x,y,type,clan){
 var L=BUILD_LEVELS[type][0];
 if(clan===undefined||clan===null)clan=type==='tent'?1:0;
@@ -377,7 +382,6 @@ if(u.bldCd<=0&&canBuild(u.x,u.y,u.clan)){
 var myW=builds.filter(function(b3){return b3.clan===u.clan&&b3.type==='warehouse';}).length;
 var typeToBuild=u.buildType,cost;
 if(myW<1){typeToBuild='warehouse';cost={wood:0,stone:0,iron:0,gold:0};}else{if(myW<3&&u.warehouseCd<=0&&Math.random()<0.15)typeToBuild='warehouse';cost=BUILD_COST[typeToBuild][0];}
-// ✅ ИСПРАВЛЕНО: передаём клан существа
 if(canAfford(u.clan,cost)){payCost(u.clan,cost);placeBuild(u.x,u.y,typeToBuild,u.clan);u.bldCd=26+Math.random()*15;if(typeToBuild==='warehouse')u.warehouseCd=60+Math.random()*40;}else u.bldCd=8+Math.random()*5;
 }else if(u.bldCd<=0)u.bldCd=5+Math.random()*3;
 }
@@ -812,7 +816,7 @@ if(u.isBaby){ctx.globalAlpha=0.9;ctx.font='bold 11px -apple-system,sans-serif';c
 }
 
 // ═══════════════════════════════════════════════════════════
-// ПЛОВЕЦ — пустое место заполнено водой
+// ПЛОВЕЦ
 // ═══════════════════════════════════════════════════════════
 function paintSwimming(u){
 var as=u.isBaby?(0.5+u.growth*0.5):1;
@@ -1167,7 +1171,6 @@ for(var i2=0;i2<trees.length;i2++)list.push({y:trees[i2].y,kind:'t',o:trees[i2]}
 for(var i3=0;i3<rocks.length;i3++)list.push({y:rocks[i3].y,kind:'r',o:rocks[i3]});
 for(var i4=0;i4<beings.length;i4++)list.push({y:beings[i4].y,kind:'u',o:beings[i4]});
 list.sort(function(a,b){return a.y-b.y;});
-// ✅ УБРАН дублирующий проход искр — искры рисуются один раз, ниже, поверх спрайтов
 for(var i6=0;i6<list.length;i6++){var d=list[i6];if(d.kind==='u')paintBeing(d.o);else if(d.kind==='r')paintRock(d.o);else if(d.kind==='b')paintBuild(d.o);else paintTree(d.o);}
 for(var i7=0;i7<sparks.length;i7++){var p2=sparks[i7];if(p2.c==='#c93a5a')continue;ctx.globalAlpha=Math.min(1,p2.life/p2.maxLife*1.5);ctx.fillStyle=p2.c;var s2=p2.s*(p2.life/p2.maxLife);ctx.fillRect(p2.x-s2/2,p2.y-s2/2,s2,s2);}
 ctx.globalAlpha=1;
@@ -1233,6 +1236,7 @@ ctx.fillStyle='rgba(26,16,48,0.8)';roundRect(12,sy,tw+22,32,10);ctx.fill();
 ctx.strokeStyle=col;ctx.lineWidth=1.5;roundRect(12,sy,tw+22,32,10);ctx.stroke();
 ctx.fillStyle=col;ctx.fillText(label,23,sy+17);
 if(currentBiome){var bLabel='🌍 '+currentBiome;ctx.font='bold 11px -apple-system,sans-serif';var bw2=ctx.measureText(bLabel).width,bx3=12,by2=sy+38;ctx.fillStyle='rgba(26,16,48,0.7)';roundRect(bx3,by2,bw2+18,24,8);ctx.fill();ctx.strokeStyle='rgba(160,120,255,0.5)';ctx.lineWidth=1;roundRect(bx3,by2,bw2+18,24,8);ctx.stroke();ctx.fillStyle='#c8b0ff';ctx.fillText(bLabel,bx3+9,by2+13);}
+var vLabel='v'+APP_VERSION;ctx.font='bold 11px -apple-system,sans-serif';var vw2=ctx.measureText(vLabel).width;var vx=12,vy=sy+38+(currentBiome?30:0);ctx.fillStyle='rgba(26,16,48,0.7)';roundRect(vx,vy,vw2+18,22,8);ctx.fill();ctx.strokeStyle='rgba(230,201,58,0.5)';ctx.lineWidth=1;roundRect(vx,vy,vw2+18,22,8);ctx.stroke();ctx.fillStyle='#e6c93a';ctx.fillText(vLabel,vx+9,vy+12);
 renderInspectPanel();
 }
 drawClockDial();
@@ -1384,7 +1388,9 @@ ctx.strokeStyle='#ffe14a';ctx.lineWidth=2.5;roundRect(btnX,btnY,btnW,btnH,18);ct
 ctx.font='bold 20px -apple-system,sans-serif';ctx.fillStyle='#fff';ctx.fillText(saveInfo?'🌍  Начать заново':'🚀  Создать мир',cw/2,btnY+btnH/2+1);
 if(has){var rsW=Math.min(200,cw-80),rsH=40,rsX=(cw-rsW)/2,rsY=btnY+btnH+14;ctx.fillStyle='rgba(200,60,60,0.25)';roundRect(rsX,rsY,rsW,rsH,12);ctx.fill();ctx.strokeStyle='rgba(255,100,100,0.7)';ctx.lineWidth=1.5;roundRect(rsX,rsY,rsW,rsH,12);ctx.stroke();ctx.font='bold 13px -apple-system,sans-serif';ctx.fillStyle='#ff8080';ctx.fillText('🗑  Удалить сохранение',cw/2,rsY+rsH/2+1);}
 ctx.font='bold 11px -apple-system,sans-serif';ctx.fillStyle='rgba(200,180,255,0.6)';
-ctx.fillText('В каждом мире — 2 случайных биома',cw/2,ch-22);
+ctx.fillText('В каждом мире — 2 случайных биома',cw/2,ch-34);
+ctx.font='bold 10px -apple-system,sans-serif';ctx.fillStyle='rgba(230,201,58,0.7)';
+ctx.fillText('Кубия  v'+APP_VERSION,cw/2,ch-16);
 ctx.textAlign='left';ctx.textBaseline='alphabetic';
 }
 function hitContinueButton(x,y){var si=getSaveInfo();if(!si)return false;var cW=Math.min(340,cw-40),cH=90,cX=(cw-cW)/2,cY=ch*0.06;return x>=cX&&x<=cX+cW&&y>=cY&&y<=cY+cH;}
@@ -1392,7 +1398,6 @@ function hitSizeCard(x,y){var si=getSaveInfo();var labelY=ch*(si?0.10:0.16);if(s
 function hitCreateButton(x,y){var si=getSaveInfo();var labelY=ch*(si?0.10:0.16);if(si)labelY=ch*0.06+90+40;var wide=cw>=720,cols=wide?4:2,rows=wide?1:2,cardGap=12,maxW=wide?160:180;var cardW=Math.min(maxW,(cw-40-cardGap*(cols-1))/cols),cardH=130;var gridY=labelY+26,infoY=gridY+rows*cardH+(rows-1)*cardGap+20;var btnW=Math.min(280,cw-60),btnH=58,btnX=(cw-btnW)/2,btnY=infoY+10;return x>=btnX&&x<=btnX+btnW&&y>=btnY&&y<=btnY+btnH;}
 function hitResetButton(x,y){var si=getSaveInfo();if(!si)return false;var labelY=ch*0.06+90+40;var wide=cw>=720,cols=wide?4:2,rows=wide?1:2,cardGap=12,maxW=wide?160:180;var cardW=Math.min(maxW,(cw-40-cardGap*(cols-1))/cols),cardH=130;var gridY=labelY+26,infoY=gridY+rows*cardH+(rows-1)*cardGap+20;var btnY=infoY+10,btnH=58;var rsW=Math.min(200,cw-80),rsH=40,rsX=(cw-rsW)/2,rsY=btnY+btnH+14;return x>=rsX&&x<=rsX+rsW&&y>=rsY&&y<=rsY+rsH;}
 var touches=new Map(),pinchDist=0,pinchZoom=1;
-// ✅ Хелпер: сброс инструмента при смене вкладки
 function ensureToolValid(){var tl=getTools();var ok=false;for(var i=0;i<tl.length;i++){if(tl[i].id===activeTool){ok=true;break;}}if(!ok)activeTool=tl[0].id;}
 function onStart(t){
 if(changelogVisible){changelogStart(t);return;}
