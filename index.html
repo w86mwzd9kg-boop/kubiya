@@ -72,7 +72,8 @@ var TABS=[{id:'world',name:'Мир',ic:'🌍'},{id:'life',name:'Жизнь',ic:'
 var TOOLS_WORLD=[{id:'grass',name:'Луга',bg:'#3d8b47',ic:'🌿'},{id:'forestfloor',name:'Подстилка',bg:'#3a5a2a',ic:'🍂'},{id:'snow',name:'Снег',bg:'#8fa8c0',ic:'❄️'},{id:'water',name:'Вода',bg:'#2f6bb5',ic:'💧'},{id:'rock',name:'Горы',bg:'#6b6b7a',ic:'⛰️'},{id:'boulder',name:'Валун',bg:'#7a7a88',ic:'🪨'},{id:'sand',name:'Песок',bg:'#c9a961',ic:'🏖️'},{id:'flame',name:'Огонь',bg:'#d95a2b',ic:'🔥'},{id:'oak',name:'Дуб',bg:'#4a7a3a',ic:'🌳'},{id:'pine',name:'Ель',bg:'#2a5a3a',ic:'🌲'},{id:'birch',name:'Берёза',bg:'#7a9a5a',ic:'🌳'},{id:'palm',name:'Пальма',bg:'#5a8a4a',ic:'🌴'},{id:'dead',name:'Сухое',bg:'#5a4a3a',ic:'🪵'}];
 var TOOLS_LIFE=[{id:'human',name:'Человек',bg:'#3a8ee6',ic:'🧑'},{id:'troll',name:'Тролли',bg:'#7a5cc9',ic:'👾'},{id:'beast',name:'Медведи',bg:'#8a5a2a',ic:'🐻'},{id:'shadow',name:'Тени',bg:'#4a3a6a',ic:'👤'},{id:'bolt',name:'Молния',bg:'#e6c93a',ic:'⚡'},{id:'remove',name:'Убрать',bg:'#5a3a4a',ic:'✖'}];
 function getTools(){return activeTab==='world'?TOOLS_WORLD:TOOLS_LIFE;}
-var WALKABLE=[true,false,true,true,true,true,true,true,true,true];
+// ✅ ИСПРАВЛЕНО: гора (2) и лава (4) теперь непроходимы
+var WALKABLE=[true,false,false,true,false,true,true,true,true,true];
 var BEING={human:{clan:0,hp:55,size:8,skin:'#e8c9a0',cloth:'#a89878',clothDark:'#8a7a58',hair:'#b8b8b8',speed:58,dmg:9,buildType:'cottage',weapon:'axe'},troll:{clan:1,hp:70,size:9,skin:'#9a8a6a',cloth:'#5a3a9a',clothDark:'#3a2a6a',hair:'#1a0e2a',speed:52,dmg:11,buildType:'tent',weapon:'club'},beast:{clan:2,hp:95,size:11,skin:'#8a5a2a',cloth:'#3a2010',clothDark:'#1a0e05',hair:'#2a1a0a',speed:70,dmg:14,buildType:null,weapon:null},shadow:{clan:3,hp:130,size:11,skin:'#4a3a6a',cloth:'#2a1a3a',clothDark:'#0a0515',hair:'#050208',speed:45,dmg:16,buildType:null,weapon:null}};
 var BUILD_LEVELS={cottage:[{w:TILE*1.7,h:TILE*1.7,hp:260,spawnEvery:45,capacity:4},{w:TILE*2.2,h:TILE*2.2,hp:550,spawnEvery:30,capacity:7},{w:TILE*2.8,h:TILE*2.8,hp:1000,spawnEvery:18,capacity:12}],tent:[{w:TILE*1.7,h:TILE*1.7,hp:210,spawnEvery:45,capacity:4},{w:TILE*2.2,h:TILE*2.2,hp:450,spawnEvery:30,capacity:7},{w:TILE*2.8,h:TILE*2.8,hp:850,spawnEvery:18,capacity:12}],warehouse:[{w:TILE*2.4,h:TILE*2.0,hp:400,spawnEvery:60,capacity:3},{w:TILE*3.0,h:TILE*2.4,hp:800,spawnEvery:45,capacity:5},{w:TILE*3.6,h:TILE*2.8,hp:1500,spawnEvery:30,capacity:8}]};
 var TREE_TYPES={oak:{hp:80,size:17,trunk:'#5a3a2a',c1:'#2a6a2a',c2:'#4a8a3a'},pine:{hp:90,size:18,trunk:'#4a2a1a',c1:'#1a4a2a',c2:'#2a5a3a'},birch:{hp:60,size:16,trunk:'#e8e8e0',c1:'#6a9a4a',c2:'#8aba5a'},palm:{hp:70,size:17,trunk:'#8a6a4a',c1:'#2a7a3a',c2:'#3a8a4a'},dead:{hp:40,size:15,trunk:'#4a3a2a',c1:null,c2:null}};
@@ -134,13 +135,11 @@ lastAutoSave=worldTime;saveWorld();
 function generateWorld(){
 tiles.fill(0);oreMap.fill(0);mountainHP.fill(0);burnTimer.fill(0);flowDepth.fill(0);biomeMap.fill(0);
 trees=[];rocks=[];
-// Выбираем 2 разных биома
 var i1=Math.floor(Math.random()*BIOMES.length);
 var i2=Math.floor(Math.random()*(BIOMES.length-1));
 if(i2>=i1)i2++;
 var b1=BIOMES[i1],b2=BIOMES[i2];
 currentBiome=b1.name+' · '+b2.name;
-// Разделяем мир волнистой границей
 var splitType=Math.random()<0.5?'x':'y';
 var waveA=Math.random()*6.28,waveB=Math.random()*6.28;
 var bias=0.35+Math.random()*0.30;
@@ -151,12 +150,10 @@ var wave=Math.sin(x*0.18+waveA)*0.09+Math.cos(y*0.14+waveB)*0.09+Math.sin((x+y)*
 biomeMap[y*COLS+x]=(t+wave)<bias?0:1;
 }
 }
-// Базовый тайл для каждой половины
 for(var i=0;i<tiles.length;i++){
 var bid=biomeMap[i]===0?b1.id:b2.id;
 tiles[i]=BASE_TILE[bid]!==undefined?BASE_TILE[bid]:0;
 }
-// Горы только в «горной» половине
 for(var bi=0;bi<2;bi++){
 var bb=bi===0?b1:b2;
 if(bb.id==='mountain'){
@@ -170,9 +167,7 @@ if(mx<2||mx>COLS-2||my<2||my>ROWS-2)break;
 }
 }
 }
-// Озёра в обеих половинах
 for(var li=0;li<randInt(3,6);li++)carveLake(rnd(COLS*0.15,COLS*0.85),rnd(ROWS*0.15,ROWS*0.85),rnd(2,3.5));
-// Деревья по биому-региону
 var scale=(COLS*ROWS)/(64*46);
 for(var bi2=0;bi2<2;bi2++){
 var bb2=bi2===0?b1:b2;
@@ -194,7 +189,6 @@ else kinds=['birch','birch','birch','birch','oak'];
 addTreeAt(tx,ty,pick(kinds));
 }
 }
-// Валуны по регионам
 for(var ri=0;ri<2;ri++){
 var bb3=ri===0?b1:b2;
 var nR=Math.floor((bb3.id==='forestfloor'?45:bb3.id==='mountain'?15:bb3.id==='sandy'?9:3)*scale/2);
@@ -240,7 +234,8 @@ function addBeaches(){var tc=[];for(var y=0;y<ROWS;y++){for(var x=0;x<COLS;x++){
 function hasNear(x,y,v){for(var dy=-1;dy<=1;dy++){for(var dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;var nx=x+dx,ny=y+dy;if(nx>=0&&nx<COLS&&ny>=0&&ny<ROWS&&tiles[ny*COLS+nx]===v)return true;}}return false;}
 
 function makeBeing(x,y,type,isBaby,gender){
-if(isBaby===undefined)isBaby=false;
+// ✅ ИСПРАВЛЕНО: обрабатываем null так же, как undefined
+if(isBaby===undefined||isBaby===null)isBaby=false;
 if(beings.length>=150)return null;
 var t=BEING[type];
 var g=(gender!==null&&gender!==undefined)?gender:(Math.random()<0.5?0:1);
@@ -252,7 +247,12 @@ function walkable(x,y){var tx=Math.floor(x/TILE),ty=Math.floor(y/TILE);if(tx<0||
 function canBuild(x,y,clan){for(var i=0;i<builds.length;i++){var b=builds[i];if(b.clan!==clan)continue;if(Math.hypot(b.x-x,b.y-y)<TILE*5)return false;}if(!walkable(x,y))return false;if(x<TILE||x>WORLD_W-TILE||y<TILE||y>WORLD_H-TILE)return false;return true;}
 function getPopulationCap(clan){var cap=0;for(var i=0;i<builds.length;i++){var b=builds[i];if(b.clan!==clan||b.type==='warehouse')continue;cap+=BUILD_LEVELS[b.type][b.level-1].capacity;}return cap;}
 function getPopulationCount(clan){var n=0;for(var i=0;i<beings.length;i++){var u=beings[i];if(u.clan===clan&&u.type!=='beast'&&u.type!=='shadow')n++;}return n;}
-function placeBuild(x,y,type){var L=BUILD_LEVELS[type][0];builds.push({x:x,y:y,type:type,level:1,hp:L.hp,maxHp:L.hp,clan:type==='tent'?1:0,spawnT:L.spawnEvery*0.5,flash:0,upgradeProg:0,pop:Math.random()*Math.PI*2});}
+// ✅ ИСПРАВЛЕНО: placeBuild принимает клан явно — тролли строят свои склады
+function placeBuild(x,y,type,clan){
+var L=BUILD_LEVELS[type][0];
+if(clan===undefined||clan===null)clan=type==='tent'?1:0;
+builds.push({x:x,y:y,type:type,level:1,hp:L.hp,maxHp:L.hp,clan:clan,spawnT:L.spawnEvery*0.5,flash:0,upgradeProg:0,pop:Math.random()*Math.PI*2});
+}
 function placeTree(x,y,type){if(trees.length>=250)return;var tx=Math.floor(x/TILE),ty=Math.floor(y/TILE);if(tx<0||tx>=COLS||ty<0||ty>=ROWS)return;var g=tiles[ty*COLS+tx];if(g!==0&&g!==3&&g!==8&&g!==9)return;for(var i=0;i<builds.length;i++){var b=builds[i];if(Math.hypot(b.x-x,b.y-y)<TILE*2)return;}var t=TREE_TYPES[type];var sv=0.8+Math.random()*0.5;trees.push({x:x,y:y,type:type,hp:Math.round(t.hp*sv),maxHp:Math.round(t.hp*sv),size:t.size*sv,seed:Math.random(),sway:Math.random()*Math.PI*2,burn:0,shake:0,sizeVar:sv});}
 function placeRock(x,y){if(rocks.length>=80)return;var tx=Math.floor(x/TILE),ty=Math.floor(y/TILE);if(tx<0||tx>=COLS||ty<0||ty>=ROWS)return;var g=tiles[ty*COLS+tx];if(g!==0&&g!==3&&g!==8&&g!==9)return;var cx=tx*TILE+TILE/2,cy=ty*TILE+TILE/2;for(var i=0;i<rocks.length;i++){var r=rocks[i];if(Math.floor(r.x/TILE)===tx&&Math.floor(r.y/TILE)===ty)return;}for(var i2=0;i2<builds.length;i2++){var b=builds[i2];if(Math.hypot(b.x-cx,b.y-cy)<TILE*1.5)return;}var sv=0.8+Math.random()*0.4;rocks.push({x:cx,y:cy,hp:45,maxHp:45,size:TILE*0.95*sv,seed:Math.random()});}
 function breed(p1,p2){var c=makeBeing((p1.x+p2.x)/2,(p1.y+p2.y)/2,p1.type,true,Math.random()<0.5?0:1);if(!c)return;for(var i=0;i<6;i++){hearts.push({x:c.x+rnd(-10,10),y:c.y-5+rnd(-5,5),vx:rnd(-25,25),vy:rnd(-70,-35),life:1.2,maxLife:1.2,size:8+Math.random()*4,color:p1.clan===0?'#ff7aaa':'#c89aff'});}p1.breedCd=BREED_COOLDOWN;p2.breedCd=BREED_COOLDOWN;}
@@ -377,7 +377,8 @@ if(u.bldCd<=0&&canBuild(u.x,u.y,u.clan)){
 var myW=builds.filter(function(b3){return b3.clan===u.clan&&b3.type==='warehouse';}).length;
 var typeToBuild=u.buildType,cost;
 if(myW<1){typeToBuild='warehouse';cost={wood:0,stone:0,iron:0,gold:0};}else{if(myW<3&&u.warehouseCd<=0&&Math.random()<0.15)typeToBuild='warehouse';cost=BUILD_COST[typeToBuild][0];}
-if(canAfford(u.clan,cost)){payCost(u.clan,cost);placeBuild(u.x,u.y,typeToBuild);u.bldCd=26+Math.random()*15;if(typeToBuild==='warehouse')u.warehouseCd=60+Math.random()*40;}else u.bldCd=8+Math.random()*5;
+// ✅ ИСПРАВЛЕНО: передаём клан существа
+if(canAfford(u.clan,cost)){payCost(u.clan,cost);placeBuild(u.x,u.y,typeToBuild,u.clan);u.bldCd=26+Math.random()*15;if(typeToBuild==='warehouse')u.warehouseCd=60+Math.random()*40;}else u.bldCd=8+Math.random()*5;
 }else if(u.bldCd<=0)u.bldCd=5+Math.random()*3;
 }
 }
@@ -485,14 +486,12 @@ if(r.hp<r.maxHp){var bw=s*1.2,bh=2.5,bx=r.x-bw/2,by=r.y-s*1.0;ctx.fillStyle='rgb
 // ИНСТРУМЕНТЫ В РУКАХ — топор / кирка / меч
 // ═══════════════════════════════════════════════════════════
 function drawAxeTool(s){
-// Рукоятка (дерево)
 ctx.fillStyle='#8a5a2a';
 ctx.fillRect(-s*0.045,-s*0.55,s*0.09,s*1.05);
 ctx.fillStyle='#5a3a1a';
 ctx.fillRect(-s*0.045,s*0.12,s*0.09,s*0.38);
 ctx.fillStyle='#a87848';
 ctx.fillRect(-s*0.045,-s*0.55,s*0.04,s*0.65);
-// Лезвие — трапеция металла
 ctx.fillStyle='#5a5a62';
 ctx.beginPath();
 ctx.moveTo(-s*0.05,-s*0.55);
@@ -500,7 +499,6 @@ ctx.lineTo(s*0.42,-s*0.52);
 ctx.lineTo(s*0.46,-s*0.18);
 ctx.lineTo(-s*0.05,-s*0.22);
 ctx.closePath();ctx.fill();
-// Светлая полоска лезвия
 ctx.fillStyle='#9090a0';
 ctx.beginPath();
 ctx.moveTo(s*0.28,-s*0.52);
@@ -508,34 +506,27 @@ ctx.lineTo(s*0.42,-s*0.52);
 ctx.lineTo(s*0.46,-s*0.18);
 ctx.lineTo(s*0.32,-s*0.19);
 ctx.closePath();ctx.fill();
-// Тёмный верх рукоятки
 ctx.fillStyle='#3a3a42';
 ctx.fillRect(-s*0.06,-s*0.57,s*0.5,s*0.05);
 }
 function drawPickaxeTool(s){
-// Рукоятка
 ctx.fillStyle='#8a5a2a';
 ctx.fillRect(-s*0.045,-s*0.5,s*0.09,s*1.05);
 ctx.fillStyle='#5a3a1a';
 ctx.fillRect(-s*0.045,s*0.12,s*0.09,s*0.38);
 ctx.fillStyle='#a87848';
 ctx.fillRect(-s*0.045,-s*0.5,s*0.04,s*0.6);
-// Головка — горизонтальная балка
 ctx.fillStyle='#4a4a52';
 ctx.fillRect(-s*0.42,-s*0.6,s*0.84,s*0.16);
-// Верхний светлый край (пиксельный стиль)
 ctx.fillStyle='#b8b8c0';
 ctx.fillRect(-s*0.42,-s*0.6,s*0.84,s*0.06);
-// Тёмные кончики
 ctx.fillStyle='#2a2a32';
 ctx.fillRect(-s*0.42,-s*0.46,s*0.14,s*0.07);
 ctx.fillRect(s*0.28,-s*0.46,s*0.14,s*0.07);
-// Лёгкий блик
 ctx.fillStyle='rgba(255,255,255,0.35)';
 ctx.fillRect(-s*0.10,-s*0.58,s*0.06,s*0.04);
 }
 function drawSwordTool(s){
-// Клинок
 var bg=ctx.createLinearGradient(-s*0.08,0,s*0.08,0);
 bg.addColorStop(0,'#8a8a92');bg.addColorStop(0.5,'#d8d8e0');bg.addColorStop(1,'#8a8a92');
 ctx.fillStyle=bg;
@@ -546,22 +537,18 @@ ctx.lineTo(-s*0.08,s*0.14);
 ctx.lineTo(s*0.08,s*0.14);
 ctx.lineTo(s*0.08,-s*1.10);
 ctx.closePath();ctx.fill();
-// Дол (центральная полоса)
 ctx.strokeStyle='#6a6a72';ctx.lineWidth=s*0.02;
 ctx.beginPath();ctx.moveTo(0,-s*1.14);ctx.lineTo(0,s*0.1);ctx.stroke();
-// Гарда
 ctx.fillStyle='#3a3a42';
 ctx.fillRect(-s*0.24,s*0.13,s*0.48,s*0.08);
 ctx.fillStyle='#5a5a62';
 ctx.fillRect(-s*0.24,s*0.13,s*0.48,s*0.03);
-// Рукоять
 ctx.fillStyle='#4a2a1a';
 ctx.fillRect(-s*0.045,s*0.21,s*0.09,s*0.22);
 ctx.fillStyle='#3a2010';
 ctx.fillRect(-s*0.045,s*0.24,s*0.09,s*0.03);
 ctx.fillRect(-s*0.045,s*0.30,s*0.09,s*0.03);
 ctx.fillRect(-s*0.045,s*0.36,s*0.09,s*0.03);
-// Навершие
 ctx.fillStyle='#5a5a62';
 ctx.beginPath();ctx.arc(0,s*0.47,s*0.065,0,Math.PI*2);ctx.fill();
 ctx.fillStyle='#8a8a92';
@@ -573,7 +560,7 @@ var toolType='axe';
 if(action==='chop'||action==='walk_to_tree')toolType='axe';
 else if(action==='mine'||action==='walk_to_mine')toolType='pickaxe';
 else if(action==='attack')toolType='sword';
-else return; // ничего не рисуем, если просто гуляет
+else return;
 var hx=s*0.4+s*0.05,hy=-s*1.05+s*0.08+s*0.85*0.85;
 ctx.save();
 ctx.translate(hx,hy);
@@ -665,7 +652,6 @@ ctx.fillStyle=tunicD;ctx.beginPath();ctx.moveTo(-armW*0.5,0);ctx.lineTo(-armW*0.
 ctx.fillStyle=skin;ctx.beginPath();ctx.ellipse(0,armLen*0.85,armW*0.55,armW*0.5,0,0,Math.PI*2);ctx.fill();
 ctx.fillStyle=skinD;for(var f=-1;f<=1;f++){ctx.beginPath();ctx.arc(f*armW*0.35,armLen*1.0,armW*0.15,0,Math.PI*2);ctx.fill();}
 ctx.restore();
-// Инструмент в руке — топор / кирка / меч
 if((u.type==='human'||u.type==='troll')&&!u.isBaby)drawToolInHand(u,s);
 }
 
@@ -730,7 +716,6 @@ ctx.fillStyle=dressD;ctx.beginPath();ctx.moveTo(-armW*0.5,0);ctx.lineTo(-armW*0.
 ctx.fillStyle=skin;ctx.beginPath();ctx.ellipse(0,armLen*0.85,armW*0.5,armW*0.42,0,0,Math.PI*2);ctx.fill();
 ctx.fillStyle=skinD;for(var f=-1;f<=1;f++){ctx.beginPath();ctx.arc(f*armW*0.32,armLen*1.0,armW*0.13,0,Math.PI*2);ctx.fill();}
 ctx.restore();
-// Инструмент в руке
 if((u.type==='human'||u.type==='troll')&&!u.isBaby)drawToolInHand(u,s);
 }
 
@@ -864,7 +849,7 @@ if(u.hp<u.maxHp){var bw=s*2,bh=3,bx=u.x-bw/2,by=u.y-s*2.25;ctx.fillStyle='rgba(0
 }
 
 // ═══════════════════════════════════════════════════════════
-// ДОМА — исправленный дымоход + прогресс-бар
+// ДОМА
 // ═══════════════════════════════════════════════════════════
 function drawWindowGlow(cx,cy,w,h,isOn){if(!isOn)return;var dark=getDarkness();var intensity=(dark-0.35)/0.65;if(intensity<=0)return;ctx.save();ctx.globalAlpha=intensity*0.55;var g=ctx.createRadialGradient(cx,cy,1,cx,cy,Math.max(w,h)*2.2);g.addColorStop(0,'rgba(255,220,130,0.95)');g.addColorStop(0.4,'rgba(255,180,70,0.5)');g.addColorStop(1,'rgba(255,140,30,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,Math.max(w,h)*2.2,0,Math.PI*2);ctx.fill();ctx.restore();}
 function drawWindow(cx,cy,w,h,isOn,cross){
@@ -881,14 +866,11 @@ ctx.fillStyle=fl?'#fff':'#9a9aa2';
 ctx.fillRect(chX,chTopY,chW,chBottomY-chTopY);
 ctx.strokeStyle=fl?'#fff':'#6a6a72';ctx.lineWidth=1;
 ctx.strokeRect(chX,chTopY,chW,chBottomY-chTopY);
-// Верхняя крышка
 ctx.fillStyle=fl?'#fff':'#b8b8c0';
 ctx.fillRect(chX-1.5,chTopY-2.5,chW+3,3);
-// Кирпичики — полоски
 ctx.strokeStyle=fl?'#fff':'rgba(60,60,70,0.55)';ctx.lineWidth=0.7;
 var brickH=(chBottomY-chTopY)/4;
 for(var bi=1;bi<4;bi++){var byy=chTopY+bi*brickH;ctx.beginPath();ctx.moveTo(chX,byy);ctx.lineTo(chX+chW,byy);ctx.stroke();}
-// Дым из трубы, если внутри жилец и ночь/вечер
 var hasRes=false;
 for(var ri=0;ri<beings.length;ri++){var ru=beings[ri];if(ru.clan===b.clan&&Math.hypot(ru.x-b.x,ru.y-b.y)<TILE*3){hasRes=true;break;}}
 if(hasRes&&getDarkness()>0.35){
@@ -958,7 +940,6 @@ ctx.beginPath();ctx.arc(b.x+doorW*0.32,y+h-doorH*0.5,1.6,0,Math.PI*2);ctx.fill()
 var roofH=h*0.42,tipY=y-roofH+3;
 ctx.fillStyle=fl?'#fff':'#6a3a2a';ctx.beginPath();ctx.moveTo(b.x,tipY);ctx.lineTo(x-w*0.15,wallTop+3);ctx.lineTo(x+w+w*0.15,wallTop+3);ctx.closePath();ctx.fill();
 ctx.strokeStyle=fl?'#fff':'#3a2010';ctx.lineWidth=1.3;ctx.stroke();
-// Дымоход у склада сбоку
 drawChimney(b,x+w*0.86,w*0.08,y-h*0.02,y+h*0.14,fl);
 if(b.hp<b.maxHp){var by=y-roofH-8;ctx.fillStyle='rgba(0,0,0,0.75)';ctx.fillRect(x-1,by-1,w+2,5);var r=b.hp/b.maxHp;ctx.fillStyle=r>0.5?'#4aff6a':r>0.25?'#f0e05a':'#ff4a5a';ctx.fillRect(x,by,w*r,3);}
 }
@@ -977,7 +958,6 @@ ctx.beginPath();ctx.moveTo(x,ly+logH);ctx.lineTo(x+w,ly+logH);ctx.stroke();
 ctx.strokeStyle=fl?'#ddd':'rgba(60,35,15,0.4)';ctx.lineWidth=0.6;
 ctx.beginPath();ctx.moveTo(x+w*0.15,wallTop);ctx.lineTo(x+w*0.15,wallTop+wallH);ctx.stroke();
 ctx.beginPath();ctx.moveTo(x+w*0.85,wallTop);ctx.lineTo(x+w*0.85,wallTop+wallH);ctx.stroke();
-// Окно-арка
 var archX=b.x,archY=y+h*0.20,archW=w*0.30,archH=h*0.15;
 drawWindowGlow(archX,archY+archH*0.5,archW,archH,true);
 ctx.fillStyle=getDarkness()>0.45?'#ffe9a8':'#3a2410';
@@ -988,13 +968,11 @@ ctx.quadraticCurveTo(archX+archW/2,archY,archX+archW/2,archY+archH*0.4);
 ctx.lineTo(archX+archW/2,archY+archH);
 ctx.closePath();ctx.fill();
 ctx.strokeStyle=fl?'#fff':'#5a3a1a';ctx.lineWidth=1.5;ctx.stroke();
-// Дверь
 var doorW=w*0.28,doorH=h*0.42;
 var doorX=b.x-doorW/2,doorY=y+h-doorH-4;
 ctx.fillStyle=fl?'#fff':'#3a2010';ctx.fillRect(doorX,doorY,doorW,doorH);
 ctx.strokeStyle=fl?'#fff':'#2a1008';ctx.lineWidth=1.2;ctx.strokeRect(doorX,doorY,doorW,doorH);
 ctx.fillStyle=fl?'#fff':'#c8a850';ctx.beginPath();ctx.arc(doorX+doorW*0.75,doorY+doorH*0.5,1.5,0,Math.PI*2);ctx.fill();
-// Крыша
 var roofH=h*0.4,roofBaseY=y+h*0.42,overhang=w*0.12;
 var roofGrad=ctx.createLinearGradient(b.x,y,b.x,roofBaseY);
 roofGrad.addColorStop(0,fl?'#fff':'#8a5a2a');roofGrad.addColorStop(1,fl?'#fff':'#5a3a1a');
@@ -1003,13 +981,11 @@ ctx.beginPath();ctx.moveTo(b.x,y);ctx.lineTo(x-overhang,roofBaseY);ctx.lineTo(x+
 ctx.strokeStyle=fl?'#fff':'#3a2010';ctx.lineWidth=1.5;ctx.stroke();
 ctx.strokeStyle=fl?'#fff':'rgba(60,35,15,0.5)';ctx.lineWidth=0.8;
 for(var r=0;r<4;r++){var t=(r+1)/5;var yy=y+(roofBaseY-y)*t;var halfW=(w/2+overhang)*t;ctx.beginPath();ctx.moveTo(b.x-halfW,yy);ctx.lineTo(b.x+halfW,yy);ctx.stroke();}
-// ⬇ ДЫМОХОД — ИСПРАВЛЕН: растёт из крыши вверх
 var chW=w*0.11;
-var chTopY=y-h*0.10;              // верх трубы выше конька
-var chBottomY=y+h*0.18;           // низ трубы уходит внутрь крыши
+var chTopY=y-h*0.10;
+var chBottomY=y+h*0.18;
 var chX=b.x+w*0.14;
 drawChimney(b,chX,chW,chTopY,chBottomY,fl);
-// Кусты
 ctx.fillStyle=fl?'#fff':'#5a8a3a';
 ctx.beginPath();ctx.arc(x+w*0.08,y+h-1,w*0.09,0,Math.PI*2);ctx.fill();
 ctx.beginPath();ctx.arc(x+w*0.92,y+h-1,w*0.09,0,Math.PI*2);ctx.fill();
@@ -1026,38 +1002,30 @@ for(var i=1;i<6;i++){var yy=wallTop+(midY-wallTop)*i/6;ctx.beginPath();ctx.moveT
 for(var j=1;j<4;j++){var yy2=midY+(y+h-4-midY)*j/4;ctx.beginPath();ctx.moveTo(x,yy2);ctx.lineTo(x+w,yy2);ctx.stroke();}
 ctx.strokeStyle=fl?'#fff':'#3a2010';ctx.lineWidth=1.5;
 ctx.beginPath();ctx.moveTo(x,midY);ctx.lineTo(x+w,midY);ctx.stroke();
-// Крыша
 var roofBaseY=y+h*0.28,overhang=w*0.14;
 var roofGrad=ctx.createLinearGradient(b.x,y-4,b.x,roofBaseY);
 roofGrad.addColorStop(0,fl?'#fff':'#4a4a52');roofGrad.addColorStop(1,fl?'#fff':'#2a2a32');
 ctx.fillStyle=roofGrad;
 ctx.beginPath();ctx.moveTo(b.x,y-4);ctx.lineTo(x-overhang,roofBaseY);ctx.lineTo(x+w+overhang,roofBaseY);ctx.closePath();ctx.fill();
 ctx.strokeStyle=fl?'#fff':'#1a1a22';ctx.lineWidth=1.2;ctx.stroke();
-// Окно в фронтоне
 var gw=w*0.16,gh=h*0.10;
 drawWindow(b.x,y+h*0.06+gh/2,gw,gh,true,true);
-// 4 окна 2 этажа
 var winY=wallTop+wallH*0.10,winW=w*0.10,winH=h*0.13;
 var winXs=[0.10,0.30,0.58,0.78];
 for(var wi=0;wi<winXs.length;wi++){var wx=x+w*winXs[wi]+winW/2;drawWindow(wx,winY+winH/2,winW,winH,true,true);}
-// Дверь
 var doorW=w*0.20,doorH=h*0.30,doorX=b.x-doorW/2,doorY=y+h-doorH-4;
 ctx.fillStyle=fl?'#fff':'#5a3a1a';ctx.fillRect(doorX,doorY,doorW,doorH);
 ctx.strokeStyle=fl?'#fff':'#2a1008';ctx.lineWidth=1.2;ctx.strokeRect(doorX,doorY,doorW,doorH);
 ctx.fillStyle=fl?'#fff':'#c8a850';ctx.beginPath();ctx.arc(doorX+doorW*0.75,doorY+doorH*0.5,1.5,0,Math.PI*2);ctx.fill();
-// Навес
 ctx.fillStyle=fl?'#fff':'#3a2a1a';
 ctx.beginPath();ctx.moveTo(b.x,doorY-h*0.07);ctx.lineTo(doorX-w*0.06,doorY);ctx.lineTo(doorX+doorW+w*0.06,doorY);ctx.closePath();ctx.fill();
-// 2 окна 1 этажа
 var lowWinY=midY+wallH*0.10,lowWinW=w*0.13,lowWinH=h*0.15;
 drawWindow(x+w*0.07+lowWinW/2,lowWinY+lowWinH/2,lowWinW,lowWinH,true,true);
 drawWindow(x+w*0.80+lowWinW/2,lowWinY+lowWinH/2,lowWinW,lowWinH,true,true);
-// Перила
 ctx.strokeStyle=fl?'#fff':'#3a2010';ctx.lineWidth=1;
 var railY=lowWinY+lowWinH+2;
 for(var rx=0;rx<4;rx++){var px=x+w*0.80+rx*w*0.045;ctx.beginPath();ctx.moveTo(px,railY);ctx.lineTo(px,y+h-4);ctx.stroke();}
 ctx.beginPath();ctx.moveTo(x+w*0.79,railY);ctx.lineTo(x+w*0.97,railY);ctx.stroke();
-// ⬇ ДЫМОХОД — ИСПРАВЛЕН
 var chW=w*0.09;
 var chX=b.x-w*0.32;
 var chTopY=y-h*0.08;
@@ -1076,21 +1044,17 @@ for(var i=1;i<7;i++){var yy=wallTop+(midY-wallTop)*i/7;ctx.beginPath();ctx.moveT
 for(var j=1;j<5;j++){var yy2=midY+(y+h-4-midY)*j/5;ctx.beginPath();ctx.moveTo(x,yy2);ctx.lineTo(x+w,yy2);ctx.stroke();}
 ctx.strokeStyle=fl?'#fff':'#3a2010';ctx.lineWidth=1.5;
 ctx.beginPath();ctx.moveTo(x,midY);ctx.lineTo(x+w,midY);ctx.stroke();
-// Крыша
 var roofBaseY=y+h*0.25,overhang=w*0.16;
 var roofGrad=ctx.createLinearGradient(b.x,y-6,b.x,roofBaseY);
 roofGrad.addColorStop(0,fl?'#fff':'#3a3a42');roofGrad.addColorStop(1,fl?'#fff':'#1a1a22');
 ctx.fillStyle=roofGrad;
 ctx.beginPath();ctx.moveTo(b.x,y-6);ctx.lineTo(x-overhang,roofBaseY);ctx.lineTo(x+w+overhang,roofBaseY);ctx.closePath();ctx.fill();
 ctx.strokeStyle=fl?'#fff':'#0a0a12';ctx.lineWidth=1.3;ctx.stroke();
-// Фронтон
 var gw=w*0.14,gh=h*0.11;
 drawWindow(b.x,y+h*0.04+gh/2,gw,gh,true,true);
-// 5 окон 2 этажа
 var winY=wallTop+wallH*0.08,winW=w*0.09,winH=h*0.12;
 var winXs=[0.06,0.25,0.45,0.65,0.85];
 for(var wi=0;wi<winXs.length;wi++){var wx=x+w*winXs[wi]+winW/2;drawWindow(wx,winY+winH/2,winW,winH,true,true);}
-// Дверь с портиком
 var doorW=w*0.18,doorH=h*0.30,doorX=b.x-doorW/2,doorY=y+h-doorH-4;
 ctx.fillStyle=fl?'#fff':'#5a3a1a';ctx.fillRect(doorX,doorY,doorW,doorH);
 ctx.strokeStyle=fl?'#fff':'#2a1008';ctx.lineWidth=1.2;ctx.strokeRect(doorX,doorY,doorW,doorH);
@@ -1100,11 +1064,9 @@ ctx.beginPath();ctx.moveTo(b.x,doorY-h*0.09);ctx.lineTo(doorX-w*0.08,doorY);ctx.
 ctx.strokeStyle=fl?'#fff':'#3a2010';ctx.lineWidth=1.2;
 ctx.beginPath();ctx.moveTo(doorX-w*0.06,doorY);ctx.lineTo(doorX-w*0.06,doorY+doorH);ctx.stroke();
 ctx.beginPath();ctx.moveTo(doorX+doorW+w*0.06,doorY);ctx.lineTo(doorX+doorW+w*0.06,doorY+doorH);ctx.stroke();
-// 2 окна 1 этажа
 var lowWinY=midY+wallH*0.15,lowWinW=w*0.12,lowWinH=h*0.14;
 drawWindow(x+w*0.06+lowWinW/2,lowWinY+lowWinH/2,lowWinW,lowWinH,true,true);
 drawWindow(x+w*0.82+lowWinW/2,lowWinY+lowWinH/2,lowWinW,lowWinH,true,true);
-// ⬇ ДВЕ ТРУБЫ — ИСПРАВЛЕНЫ
 var ch1W=w*0.08,ch1X=b.x-w*0.30;
 drawChimney(b,ch1X,ch1W,y-h*0.10,y+h*0.22,fl);
 var ch2W=w*0.08,ch2X=b.x+w*0.22;
@@ -1199,15 +1161,13 @@ var lavaBaseFrame=Math.floor(worldTime*7);
 for(var y4=y0;y4<y1;y4++){for(var x4=x0;x4<x1;x4++){var idx4=y4*COLS+x4;if(tiles[idx4]!==4)continue;var px4=x4*TILE,py4=y4*TILE;var fo2=Math.floor(y4*0.9+Math.sin(x4*0.5+worldTime)*1.5);var fF=((lavaBaseFrame+fo2)%LAVA_FRAMES+LAVA_FRAMES)%LAVA_FRAMES;var gl=ctx.createRadialGradient(px4+TILE/2,py4+TILE/2,TILE*0.2,px4+TILE/2,py4+TILE/2,TILE*1.6);gl.addColorStop(0,'rgba(255,140,40,0.25)');gl.addColorStop(0.5,'rgba(255,80,20,0.12)');gl.addColorStop(1,'rgba(255,60,0,0)');ctx.fillStyle=gl;ctx.fillRect(px4-TILE,py4-TILE,TILE*3,TILE*3);ctx.drawImage(tileCache.lava[fF],px4,py4,TILE+1,TILE+1);}}
 for(var y5=y0;y5<y1;y5++){for(var x5=x0;x5<x1;x5++){var idx5=y5*COLS+x5;if(burnTimer[idx5]<=0)continue;var t5=tiles[idx5];if(t5!==0&&t5!==3&&t5!==8&&t5!==9)continue;drawFireOverlay(x5*TILE,y5*TILE,idx5);}}
 drawBolts();
-// Сортировка по Y
 var list=[];
 for(var bi=0;bi<builds.length;bi++)list.push({y:builds[bi].y,kind:'b',o:builds[bi]});
 for(var i2=0;i2<trees.length;i2++)list.push({y:trees[i2].y,kind:'t',o:trees[i2]});
 for(var i3=0;i3<rocks.length;i3++)list.push({y:rocks[i3].y,kind:'r',o:rocks[i3]});
 for(var i4=0;i4<beings.length;i4++)list.push({y:beings[i4].y,kind:'u',o:beings[i4]});
 list.sort(function(a,b){return a.y-b.y;});
-for(var i5=0;i5<sparks.length;i5++){var p=sparks[i5];ctx.globalAlpha=Math.min(1,p.life/p.maxLife*1.5);ctx.fillStyle=p.c;var s=p.s*(p.life/p.maxLife);ctx.fillRect(p.x-s/2,p.y-s/2,s,s);}
-ctx.globalAlpha=1;
+// ✅ УБРАН дублирующий проход искр — искры рисуются один раз, ниже, поверх спрайтов
 for(var i6=0;i6<list.length;i6++){var d=list[i6];if(d.kind==='u')paintBeing(d.o);else if(d.kind==='r')paintRock(d.o);else if(d.kind==='b')paintBuild(d.o);else paintTree(d.o);}
 for(var i7=0;i7<sparks.length;i7++){var p2=sparks[i7];if(p2.c==='#c93a5a')continue;ctx.globalAlpha=Math.min(1,p2.life/p2.maxLife*1.5);ctx.fillStyle=p2.c;var s2=p2.s*(p2.life/p2.maxLife);ctx.fillRect(p2.x-s2/2,p2.y-s2/2,s2,s2);}
 ctx.globalAlpha=1;
@@ -1432,6 +1392,8 @@ function hitSizeCard(x,y){var si=getSaveInfo();var labelY=ch*(si?0.10:0.16);if(s
 function hitCreateButton(x,y){var si=getSaveInfo();var labelY=ch*(si?0.10:0.16);if(si)labelY=ch*0.06+90+40;var wide=cw>=720,cols=wide?4:2,rows=wide?1:2,cardGap=12,maxW=wide?160:180;var cardW=Math.min(maxW,(cw-40-cardGap*(cols-1))/cols),cardH=130;var gridY=labelY+26,infoY=gridY+rows*cardH+(rows-1)*cardGap+20;var btnW=Math.min(280,cw-60),btnH=58,btnX=(cw-btnW)/2,btnY=infoY+10;return x>=btnX&&x<=btnX+btnW&&y>=btnY&&y<=btnY+btnH;}
 function hitResetButton(x,y){var si=getSaveInfo();if(!si)return false;var labelY=ch*0.06+90+40;var wide=cw>=720,cols=wide?4:2,rows=wide?1:2,cardGap=12,maxW=wide?160:180;var cardW=Math.min(maxW,(cw-40-cardGap*(cols-1))/cols),cardH=130;var gridY=labelY+26,infoY=gridY+rows*cardH+(rows-1)*cardGap+20;var btnY=infoY+10,btnH=58;var rsW=Math.min(200,cw-80),rsH=40,rsX=(cw-rsW)/2,rsY=btnY+btnH+14;return x>=rsX&&x<=rsX+rsW&&y>=rsY&&y<=rsY+rsH;}
 var touches=new Map(),pinchDist=0,pinchZoom=1;
+// ✅ Хелпер: сброс инструмента при смене вкладки
+function ensureToolValid(){var tl=getTools();var ok=false;for(var i=0;i<tl.length;i++){if(tl[i].id===activeTool){ok=true;break;}}if(!ok)activeTool=tl[0].id;}
 function onStart(t){
 if(changelogVisible){changelogStart(t);return;}
 if(appState==='settings'){if(hitContinueButton(t.clientX,t.clientY)){loadWorld();return;}if(hitResetButton(t.clientX,t.clientY)){deleteSave();return;}var sizeId=hitSizeCard(t.clientX,t.clientY);if(sizeId){selectedSize=sizeId;return;}if(hitCreateButton(t.clientX,t.clientY)){startGame(selectedSize,false);return;}return;}
@@ -1445,7 +1407,7 @@ if(tb==='save'){if(saveWorld())saveFlash=0.5;return;}
 if(tb==='history'){openHistory();return;}
 if(tb==='settings'){saveWorld();appState='settings';return;}
 if(t.clientY<VIEW_H){var zb=hitZoomButton(t.clientX,t.clientY);if(zb==='plus'){var mx=cw/2,my=VIEW_H/2,before=toWorld(mx,my);zoom=cl(zoom*1.3,MIN_ZOOM,MAX_ZOOM);var after=toWorld(mx,my);camX+=before.x-after.x;camY+=before.y-after.y;boundCamera();return;}if(zb==='minus'){var mx2=cw/2,my2=VIEW_H/2,before2=toWorld(mx2,my2);zoom=cl(zoom/1.3,MIN_ZOOM,MAX_ZOOM);var after2=toWorld(mx2,my2);camX+=before2.x-after2.x;camY+=before2.y-after2.y;boundCamera();return;}}
-if(!hideBar&&t.clientY>=VIEW_H){var tab=hitTab(t.clientX,t.clientY);if(tab){activeTab=tab;return;}var i=hitToolButton(t.clientX,t.clientY);if(i>=0){activeTool=getTools()[i].id;return;}return;}
+if(!hideBar&&t.clientY>=VIEW_H){var tab=hitTab(t.clientX,t.clientY);if(tab){activeTab=tab;ensureToolValid();return;}var i=hitToolButton(t.clientX,t.clientY);if(i>=0){activeTool=getTools()[i].id;return;}return;}
 if(panMode){touches.get(t.identifier).pan=true;}else{var w=toWorld(t.clientX,t.clientY);useTool(w.x,w.y);touches.get(t.identifier).draw=true;}
 }else if(touches.size===2){for(var info of touches.values()){info.pan=false;info.draw=false;}var arr=Array.from(touches.values());pinchDist=Math.hypot(arr[0].x-arr[1].x,arr[0].y-arr[1].y);pinchZoom=zoom;}
 }
@@ -1484,7 +1446,7 @@ if(tb==='save'){if(saveWorld())saveFlash=0.5;return;}
 if(tb==='history'){openHistory();return;}
 if(tb==='settings'){saveWorld();appState='settings';return;}
 if(e.clientY<VIEW_H){var zb=hitZoomButton(e.clientX,e.clientY);if(zb==='plus'){var mx=cw/2,my=VIEW_H/2,before=toWorld(mx,my);zoom=cl(zoom*1.3,MIN_ZOOM,MAX_ZOOM);var after=toWorld(mx,my);camX+=before.x-after.x;camY+=before.y-after.y;boundCamera();return;}if(zb==='minus'){var mx2=cw/2,my2=VIEW_H/2,before2=toWorld(mx2,my2);zoom=cl(zoom/1.3,MIN_ZOOM,MAX_ZOOM);var after2=toWorld(mx2,my2);camX+=before2.x-after2.x;camY+=before2.y-after2.y;boundCamera();return;}}
-if(!hideBar&&e.clientY>=VIEW_H){var tab=hitTab(e.clientX,e.clientY);if(tab){activeTab=tab;return;}var i=hitToolButton(e.clientX,e.clientY);if(i>=0){activeTool=getTools()[i].id;return;}return;}
+if(!hideBar&&e.clientY>=VIEW_H){var tab=hitTab(e.clientX,e.clientY);if(tab){activeTab=tab;ensureToolValid();return;}var i=hitToolButton(e.clientX,e.clientY);if(i>=0){activeTool=getTools()[i].id;return;}return;}
 if(!panMode&&e.clientY<VIEW_H){var w=toWorld(e.clientX,e.clientY);useTool(w.x,w.y);}
 });
 document.addEventListener('mousemove',function(e){if(changelogVisible)return;if(appState!=='playing'||!mDown)return;var dx=e.clientX-lastX,dy=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;if(e.buttons===4||panMode){camX-=dx/zoom;camY-=dy/zoom;boundCamera();}else if(!panMode&&e.clientY<VIEW_H){var w=toWorld(e.clientX,e.clientY);useTool(w.x,w.y);}});
