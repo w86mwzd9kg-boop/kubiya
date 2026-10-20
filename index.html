@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="format-detection" content="telephone=no">
 <meta name="theme-color" content="#1a1030">
-<title>Кубия 3.3</title>
+<title>Кубия 3.4</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:-apple-system,'Trebuchet MS',sans-serif;color:#fff;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;position:fixed;top:0;left:0}
@@ -21,15 +21,16 @@ canvas{display:block;position:absolute;top:0;left:0}
 'use strict';
 
 var CHANGELOG=[
-  {version:'3.3.0',date:'19.10.2026',title:'Миникарта и сложность набегов',changes:[
-    {t:'new',text:'Выбор сложности набегов в настройках (Легко, Обычно, Сложно, Безумие)'},
-    {t:'fix',text:'Исправлен баг с миникартой (теперь видны снег, песок, вода)'},
-    {t:'fix',text:'Живот медведей теперь светло-коричневый, чтобы не сливаться с телом'},
-    {t:'imp',text:'Обновленное ядро версии 3.3.0'}
+  {version:'3.4.0',date:'20.10.2026',title:'Исправление багов',changes:[
+    {t:'fix',text:'Исправлено положение кнопок (Пауза и Скорость)'},
+    {t:'fix',text:'Кузница, Таверна и Башня снова ставятся нормально'},
+    {t:'fix',text:'Кнопка "Убрать" теперь работает быстро, как кисть (зажал и стер)'},
+    {t:'imp',text:'Валуны получили красивую текстуру, трещины и блики вместо серого круга'},
+    {t:'new',text:'Обновленное ядро версии 3.4.0'}
   ]}
 ];
 var APP_VERSION=CHANGELOG[0].version;
-var VERSION_KEY='kubiya_version_v17';
+var VERSION_KEY='kubiya_version_v18';
 var CHANGE_META={
   new:{label:'НОВОЕ',color:'#4aff6a',icon:'✨'},
   fix:{label:'ИСПРАВЛЕНО',color:'#ff6a6a',icon:'🔧'},
@@ -88,7 +89,7 @@ var BUILD_LEVELS={
 };
 var BASE_STORAGE={wood:100,stone:50,iron:20,gold:10,diamond:5,emerald:3};
 var WAREHOUSE_CAPACITY=[{wood:150,stone:80,iron:40,gold:20,diamond:10,emerald:5},{wood:300,stone:200,iron:100,gold:50,diamond:25,emerald:12},{wood:500,stone:400,iron:250,gold:100,diamond:60,emerald:30}];
-var SAVE_KEY='kubiya_save_v46',AUTO_SAVE_INTERVAL=6,lastAutoSave=0,saveFlash=0;
+var SAVE_KEY='kubiya_save_v47',AUTO_SAVE_INTERVAL=6,lastAutoSave=0,saveFlash=0;
 
 var WORLD_SIZES=[
   {id:'small',cols:40,rows:30,name:'Остров',desc:'Компактный',ic:'🏝️'},
@@ -359,7 +360,7 @@ var RelaxMus={
   }
 };
 
-var SETTINGS_KEY='kubiya_settings_v6';
+var SETTINGS_KEY='kubiya_settings_v7';
 function readSettings(){try{return JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}');}catch(e){return {};}}
 function writeSettings(s){try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));}catch(e){}}
 function getSetting(k,def){var s=readSettings();return s[k]!==undefined?s[k]:def;}
@@ -657,7 +658,7 @@ function serializeWorld(){
   for(var k in villages){var v=villages[k];vlist.push({id:v.id,name:v.name,clan:v.clan,color:v.color,
     allies:v.allies.slice(),wars:v.wars.slice(),cx:v.cx,cy:v.cy,isKingdom:v.isKingdom,order:v.order||'auto'});}
   return {
-    version:46,savedAt:Date.now(),playTime:playTime,sizeId:selectedSize,
+    version:47,savedAt:Date.now(),playTime:playTime,sizeId:selectedSize,
     COLS:COLS,ROWS:ROWS,biome:currentBiome,camX:camX,camY:camY,zoom:zoom,
     activeTab:activeTab,activeTool:activeTool,cyclePhase:cyclePhase,
     wood:{0:wood[0],1:wood[1]},minerals:Object.assign({},minerals),nextRaidTime:nextRaidTime,
@@ -735,7 +736,7 @@ function applyLoadedData(d){
 }
 function loadWorld(){
   try{var raw=localStorage.getItem(SAVE_KEY);if(!raw)return false;
-    var d=JSON.parse(raw);if(d.version<1||d.version>46)return false;
+    var d=JSON.parse(raw);if(d.version<1||d.version>47)return false;
     applyLoadedData(d);return true;}catch(e){return false;}
 }
 function deleteSave(){try{localStorage.removeItem(SAVE_KEY);}catch(e){}}
@@ -1722,10 +1723,6 @@ function tickAnimals(dt){
   }
 }
 
-// ═══════════════════════════════════════════════════════
-// ЧАСТЬ 2 НАЧИНАЕТСЯ ЗДЕСЬ — вставь сразу после этой строки
-// ═══════════════════════════════════════════════════════
-
 // ═══ РИСОВАНИЕ ЖИВОТНЫХ ═══
 function drawLegAt(x,y,len,w,angle,color){
   ctx.save();ctx.translate(x,y);ctx.rotate(angle);
@@ -2073,7 +2070,7 @@ function paintFemaleBody(u,s,fl){
   if((u.type==='human'||u.type==='troll')&&!u.isBaby)drawToolInHand(u,s);
 }
 
-// МЕДВЕДЬ (Живот теперь светло-коричневый)
+// МЕДВЕДЬ
 function paintBear(u){
   var as=u.isBaby?(0.6+u.growth*0.4):1;
   var s=u.size*as*1.15;
@@ -2613,20 +2610,77 @@ function paintTree(t){
     ctx.fillStyle=fg;ctx.beginPath();ctx.arc(t.x,t.y-s*0.8,s*1.3,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
   }
 }
+
+// ═══ УЛУЧШЕННЫЕ ВАЛУНЫ ═══
 function paintRock(r){
-  var s=r.size,hp=r.hp/r.maxHp;
-  ctx.fillStyle='rgba(0,0,0,0.45)';
-  ctx.beginPath();ctx.ellipse(r.x,r.y+s*0.5,s*0.95,s*0.4,0,0,Math.PI*2);ctx.fill();
-  var bg=ctx.createLinearGradient(r.x-s*0.5,r.y-s*0.5,r.x+s*0.5,r.y+s*0.5);
-  bg.addColorStop(0,'#a0a0a8');bg.addColorStop(0.4,'#8a8a92');bg.addColorStop(0.7,'#6a6a72');bg.addColorStop(1,'#4a4a52');
-  ctx.fillStyle=bg;ctx.beginPath();ctx.arc(r.x,r.y,s*0.85,0,Math.PI*2);ctx.fill();
-  if(r.hp<r.maxHp){
-    var bw=s*1.2,bh=2.5,bx=r.x-bw/2,by=r.y-s;
-    ctx.fillStyle='rgba(0,0,0,0.7)';ctx.fillRect(bx-0.5,by-0.5,bw+1,bh+1);
-    ctx.fillStyle=hp>0.5?'#4aff6a':hp>0.25?'#f0e05a':'#ff4a5a';
-    ctx.fillRect(bx,by,bw*hp,bh);
+  var s = r.size, hp = r.hp / r.maxHp;
+  
+  // Тень
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.beginPath(); ctx.ellipse(r.x, r.y + s * 0.4, s * 0.9, s * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+
+  // Основа камня (многогранник)
+  var bg = ctx.createLinearGradient(r.x - s * 0.6, r.y - s * 0.6, r.x + s * 0.6, r.y + s * 0.6);
+  bg.addColorStop(0, '#b0b0b8');
+  bg.addColorStop(0.4, '#8a8a92');
+  bg.addColorStop(0.8, '#5a5a62');
+  bg.addColorStop(1, '#3a3a42');
+  
+  ctx.fillStyle = bg;
+  ctx.beginPath();
+  ctx.moveTo(r.x - s * 0.7, r.y - s * 0.1);
+  ctx.lineTo(r.x - s * 0.5, r.y - s * 0.6);
+  ctx.lineTo(r.x + s * 0.2, r.y - s * 0.7);
+  ctx.lineTo(r.x + s * 0.7, r.y - s * 0.3);
+  ctx.lineTo(r.x + s * 0.6, r.y + s * 0.5);
+  ctx.lineTo(r.x - s * 0.1, r.y + s * 0.6);
+  ctx.lineTo(r.x - s * 0.6, r.y + s * 0.3);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Блик сверху
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.beginPath();
+  ctx.moveTo(r.x - s * 0.5, r.y - s * 0.4);
+  ctx.lineTo(r.x - s * 0.1, r.y - s * 0.6);
+  ctx.lineTo(r.x + s * 0.3, r.y - s * 0.4);
+  ctx.lineTo(r.x - s * 0.1, r.y - s * 0.2);
+  ctx.closePath();
+  ctx.fill();
+
+  // Трещины/текстура
+  ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(r.x - s * 0.3, r.y - s * 0.2);
+  ctx.lineTo(r.x - s * 0.1, r.y + s * 0.1);
+  ctx.lineTo(r.x + s * 0.2, r.y + s * 0.05);
+  ctx.stroke();
+  
+  ctx.beginPath();
+  ctx.moveTo(r.x + s * 0.1, r.y - s * 0.5);
+  ctx.lineTo(r.x + s * 0.3, r.y - s * 0.1);
+  ctx.stroke();
+
+  // Мох (если камень старый)
+  if (r.seed > 0.5) {
+    ctx.fillStyle = 'rgba(80, 160, 60, 0.4)';
+    ctx.beginPath();
+    ctx.arc(r.x - s * 0.4, r.y - s * 0.3, s * 0.15, 0, Math.PI * 2);
+    ctx.arc(r.x - s * 0.2, r.y - s * 0.45, s * 0.1, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Полоска здоровья (если поврежден)
+  if (r.hp < r.maxHp) {
+    var bw = s * 1.2, bh = 2.5, bx = r.x - bw / 2, by = r.y - s * 0.9;
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(bx - 0.5, by - 0.5, bw + 1, bh + 1);
+    ctx.fillStyle = hp > 0.5 ? '#4aff6a' : hp > 0.25 ? '#f0e05a' : '#ff4a5a';
+    ctx.fillRect(bx, by, bw * hp, bh);
   }
 }
+
 function drawMountainTile(gx,gy,idx){
   var px=gx*TILE,py=gy*TILE,seed=decorSeed[idx],ore=oreMap[idx],hp=mountainHP[idx];
   var maxHp=MOUNTAIN_HP,dmgRatio=1-Math.max(0,hp/maxHp);
@@ -2885,7 +2939,6 @@ function renderMinimap(){
   ctx.strokeStyle='rgba(160,120,255,0.8)';ctx.lineWidth=1.5;
   roundRect(mx,my,ms,ms,6);ctx.stroke();
   
-  // ФИКС: Миникарта теперь отрисовывается с правильным шагом
   var pw=ms-4,ph=ms-4,px=mx+2,py=my+2,sx=pw/COLS,sy=ph/ROWS;
   var step=Math.max(1,Math.floor(COLS/100));
   
@@ -2924,8 +2977,11 @@ function hitMinimap(x,y){
   if(x<r.x||x>r.x+r.w||y<r.y||y>r.y+r.h)return null;
   return {x:(x-r.x-2)/(r.w-4)*WORLD_W,y:(y-r.y-2)/(r.h-4)*WORLD_H};
 }
+
+// ═══ ИСПРАВЛЕННЫЕ КНОПКИ ═══
 function getPauseBtn(){
   var ms=Math.min(96,cw*0.22);
+  // Пауза сдвинута выше, чтобы не мешать миникарте
   return {x:cw-12-42,y:VIEW_H-ms-10-42-8-42-8,size:42};
 }
 function renderPauseBtn(){
@@ -2947,6 +3003,7 @@ function hitPauseBtn(x,y){
 }
 function getSpeedBtnLayout(){
   var ms=Math.min(96,cw*0.22),size=44;
+  // Скорость над паузой
   return {x:cw-size-12,y:VIEW_H-ms-10-8-size,size:size};
 }
 function renderSpeedButton(){
@@ -4176,11 +4233,26 @@ function startGameWithKingdom(k){
 }
 
 // ═══ USE TOOL ═══
-var lastWallTime=0;
+var lastWallTime=0,lastBuildTime=0;
 function useTool(px,py){
   var tx=Math.floor(px/TILE),ty=Math.floor(py/TILE);
   if(tx<0||tx>=COLS||ty<0||ty>=ROWS)return;
   var i=ty*COLS+tx;
+
+  // Убрать - работает как быстрая кисть
+  if(activeTool==='remove'){
+    var nowR=performance.now();
+    if(nowR-lastTick<50)return; // Задержка 50мс
+    lastTick=nowR;
+    tiles[i]=0;burnTimer[i]=0;oreMap[i]=0;mountainHP[i]=0;flowDepth[i]=0;
+    beings=beings.filter(function(u){return Math.floor(u.x/TILE)!==tx||Math.floor(u.y/TILE)!==ty;});
+    builds=builds.filter(function(b){return Math.floor(b.x/TILE)!==tx||Math.floor(b.y/TILE)!==ty;});
+    trees=trees.filter(function(t){return Math.floor(t.x/TILE)!==tx||Math.floor(t.y/TILE)!==ty;});
+    rocks=rocks.filter(function(r){return Math.floor(r.x/TILE)!==tx||Math.floor(r.y/TILE)!==ty;});
+    animals=animals.filter(function(a){return Math.floor(a.x/TILE)!==tx||Math.floor(a.y/TILE)!==ty;});
+    return;
+  }
+
   if(activeTool==='wallwood'||activeTool==='wallstone'){
     var now=performance.now();
     if(now-lastWallTime<70)return;
@@ -4216,17 +4288,29 @@ function useTool(px,py){
     }
     return;
   }
+  
+  // Кузница, Таверна, Башня
   if(activeTool==='forge'||activeTool==='tavern'||activeTool==='tower'){
-    if(canBuild(px,py,0))placeBuild(px,py,activeTool,0,playerKingdomId||undefined);
+    var nowB=performance.now();
+    if(nowB-lastBuildTime<200)return; // Защита от спама
+    lastBuildTime=nowB;
+    if(canBuild(px,py,0)){
+      placeBuild(px,py,activeTool,0,playerKingdomId||undefined);
+      for(var hb=0;hb<4;hb++)hearts.push({x:px+rnd(-10,10),y:py-5,vx:rnd(-20,20),vy:rnd(-40,-20),life:1,maxLife:1,size:7,color:'#ffe14a'});
+    } else {
+      toast('Здесь нельзя строить (близко к другому дому)',1.5);
+    }
     return;
   }
+
   var now2=performance.now();
-  var terrain=activeTool==='grass'||activeTool==='forestfloor'||activeTool==='snow'||activeTool==='water'||activeTool==='rock'||activeTool==='sand'||activeTool==='remove';
+  var terrain=activeTool==='grass'||activeTool==='forestfloor'||activeTool==='snow'||activeTool==='water'||activeTool==='rock'||activeTool==='sand';
   var isTree=['oak','pine','birch','palm','dead'].indexOf(activeTool)>=0;
   var isAnimal=['rabbit','deer','boar','fox','wolf','sheep','goat','chicken'].indexOf(activeTool)>=0;
   var delay=(isTree||activeTool==='boulder'||isAnimal||activeTool==='house2')?180:130;
   if(!terrain&&now2-lastTick<delay)return;
   lastTick=now2;
+  
   if(activeTool==='grass'){tiles[i]=0;burnTimer[i]=0;oreMap[i]=0;mountainHP[i]=0;flowDepth[i]=0;}
   else if(activeTool==='forestfloor'){tiles[i]=8;burnTimer[i]=0;oreMap[i]=0;mountainHP[i]=0;flowDepth[i]=0;}
   else if(activeTool==='snow'){tiles[i]=9;burnTimer[i]=0;oreMap[i]=0;mountainHP[i]=0;flowDepth[i]=0;}
@@ -4256,14 +4340,6 @@ function useTool(px,py){
   else if(activeTool==='sheep')makeAnimal(px,py,'sheep');
   else if(activeTool==='goat')makeAnimal(px,py,'goat');
   else if(activeTool==='chicken')makeAnimal(px,py,'chicken');
-  else if(activeTool==='remove'){
-    tiles[i]=0;burnTimer[i]=0;oreMap[i]=0;mountainHP[i]=0;flowDepth[i]=0;
-    beings=beings.filter(function(u){return Math.floor(u.x/TILE)!==tx||Math.floor(u.y/TILE)!==ty;});
-    builds=builds.filter(function(b){return Math.floor(b.x/TILE)!==tx||Math.floor(b.y/TILE)!==ty;});
-    trees=trees.filter(function(t){return Math.floor(t.x/TILE)!==tx||Math.floor(t.y/TILE)!==ty;});
-    rocks=rocks.filter(function(r){return Math.floor(r.x/TILE)!==tx||Math.floor(r.y/TILE)!==ty;});
-    animals=animals.filter(function(a){return Math.floor(a.x/TILE)!==tx||Math.floor(a.y/TILE)!==ty;});
-  }
   else if(activeTool==='human')makeBeing(px,py,'human',false,null,playerKingdomId||undefined);
   else if(activeTool==='warrior')makeBeing(px,py,'warrior',false,null,playerKingdomId||undefined);
   else if(activeTool==='troll')makeBeing(px,py,'troll',false,null,playerKingdomId||undefined);
@@ -4615,7 +4691,7 @@ window.addEventListener('resize',function(){setTimeout(function(){initCanvas();b
 window.addEventListener('orientationchange',function(){setTimeout(function(){initCanvas();boundCamera();},200);});
 requestAnimationFrame(loop);
 
-try{document.title='Кубия 3.3';}catch(e){}
+try{document.title='Кубия 3.4';}catch(e){}
 </script>
 </body>
 </html>
