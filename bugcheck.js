@@ -7,67 +7,118 @@ const fs = require('fs');
     const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--disable-setuid-sandbox'] });
     const page = await browser.newPage();
 
-    // Ловим вылеты самой игры
     page.on('pageerror', error => {
-      bugs.push({ sev: 'critical', cat: 'error', msg: error.message });
+      bugs.push({ sev: 'critical', cat: 'Вылет', msg: 'Ошибка в консоли: ' + error.message });
     });
 
-    console.log('Открываем игру...');
-    // Ждем только загрузку текста (так быстрее и надежнее)
+    console.log('Загрузка игры...');
     const response = await page.goto('https://w86mwzd9kg-boop.github.io/kubiya/', { waitUntil: 'domcontentloaded', timeout: 60000 });
     const html = await response.text();
 
-    console.log('Ищем баги в коде...');
+    // --- СТАТИЧЕСКИЙ АНАЛИЗ (Проверка кода) ---
+    console.log('Проверка кода...');
     if (/if\s*\(\s*a\.isExposed\s*\)/.test(html)) {
-      bugs.push({ sev: 'critical', cat: 'static', msg: 'hostile(): проверяется a.isExposed вместо b.isExposed' });
+      bugs.push({ sev: 'critical', cat: 'Код', msg: 'В функции hostile() проверяется a.isExposed вместо b.isExposed (жители не атакуют предателя)' });
     }
     if (/mode\s*===\s*['"]divine['"]\s*\?\s*999/.test(html)) {
-      bugs.push({ sev: 'warning', cat: 'static', msg: 'Урон Кары (999) не убивает медведя на "Безумии"' });
+      bugs.push({ sev: 'warning', cat: 'Код', msg: 'Урон Божественной Кары (999) меньше HP медведя на сложности "Безумие" (1000)' });
     }
 
-    // СРАЗУ сохраняем статические баги, чтобы они не потерялись
     fs.writeFileSync('bugs.json', JSON.stringify(bugs, null, 2));
 
-    console.log('Запускаем игру и включаем проверки...');
+    // --- ДИНАМИЧЕСКИЙ АНАЛИЗ (Игра) ---
+    console.log('Запуск игры и симуляция...');
     await page.evaluate(() => {
       window.__CLOUD_BUGS__ = [];
-      // Пытаемся запустить игру (нажимаем "Создать мир")
-      try {
-         if (typeof appState !== 'undefined' && appState === 'settings') {
-             if (typeof showKingdomPick === 'function') showKingdomPick('medium');
-         }
-      } catch(e) {}
+      
+      const addBug = (sev, cat, msg) => {
+        window.__CLOUD_BUGS__.push({ sev, cat, msg });
+      };
 
-      // Бот делает пакости
+      // Имитация игрока (спавним предателей, бьем молниями)
       setInterval(() => {
         try {
-          if (typeof strikeBolt === 'function' && Math.random() > 0.4) strikeBolt(Math.random() * WORLD_W, Math.random() * WORLD_H, 'divine');
-          if (typeof makeBeing === 'function' && Math.random() > 0.6) makeBeing(Math.random() * WORLD_W, Math.random() * WORLD_H, 'traitor', false, null);
-        } catch(e) {}
-      }, 800);
-
-      // Глубокие проверки
-      setInterval(() => {
-        try {
-          if (typeof beings !== 'undefined' && Array.isArray(beings)) {
-            var nanCount = 0, deadCount = 0;
-            for (var i = 0; i < beings.length; i++) {
-              var u = beings[i];
-              if (!u) continue;
-              if (u.hp <= 0) deadCount++;
-              if (!isFinite(u.x) || !isFinite(u.y)) nanCount++;
-            }
-            if (deadCount > 0) window.__CLOUD_BUGS__.push({ sev: 'warning', cat: 'logic', msg: 'Найдено ' + deadCount + ' мертвых существ' });
-            if (nanCount > 0) window.__CLOUD_BUGS__.push({ sev: 'critical', cat: 'state', msg: 'Найдено ' + nanCount + ' существ с NaN координатами' });
+          if (typeof strikeBolt === 'function' && Math.random() > 0.5) {
+            strikeBolt(Math.random() * WORLD_W, Math.random() * WORLD_H, 'divine');
           }
+          if (typeof makeBeing === 'function' && Math.random() > 0.6) {
+            makeBeing(Math.random() * WORLD_W, Math.random() * WORLD_H, Math.random() > 0.5 ? 'traitor' : 'beast', false, null);
+          }
+        } catch(e) {}
+      }, 1000);
+
+      // ГЛУБОКАЯ ПРОВЕРКА ВСЕХ СИСТЕМ (каждые 2 секунды)
+      setInterval(() => {
+        try {
+          if (typeof appState === 'undefined' || appState !== 'playing') return;
+
+          // 1. Проверка существ
+          if (typeof beings !== 'undefined' && Array.isArray(beings)) {
+            let zombies = [], nanEntities = [], stuckEntities = [];
+            
+            for (let u of beings) {
+              if (!u) continue;
+              let typeName = u.type === 'human' ? (u.isBaby ? 'Младенец' : 'Человек') : u.type;
+              
+              if (u.hp <= 0) zombies.push(typeName);
+              if (!isFinite(u.x) || !isFinite(u.y)) nanEntities.push(typeName);
+              if (typeof walkable === 'function' && !u.swimming && !walkable(u.x, u.y)) stuckEntities.push(typeName);
+            }
+            
+            if (zombies.length > 0) addBug('warning', 'Логика', `Зомби: ${zombies.length} существ с HP <= 0 (${zombies[0]} и др.) всё ещё в мире`);
+            if (nanEntities.length > 0) addBug('critical', 'Координаты', `NaN: ${nanEntities.length} существ (${nanEntities[0]}) имеют сломанные координаты (x или y = NaN)`);
+            if (stuckEntities.length > 0) addBug('warning', 'Физика', `Застревание: ${stuckEntities.length} существ (${stuckEntities[0]}) застряли внутри непроходимой текстуры`);
+            
+            // Проверка лимита популяции
+            if (typeof upgrades !== 'undefined' && beings.length > upgrades.popLimit + 50) {
+               addBug('info', 'Лимиты', `Перенаселение: Существ ${beings.length} при лимите ${upgrades.popLimit}`);
+            }
+          }
+
+          // 2. Проверка зданий
+          if (typeof builds !== 'undefined' && Array.isArray(builds)) {
+            let ruinedBuilds = [];
+            for (let b of builds) {
+              if (b.hp <= 0) ruinedBuilds.push(b.type);
+            }
+            if (ruinedBuilds.length > 0) addBug('warning', 'Стройка', `Руины: ${ruinedBuilds.length} зданий (${ruinedBuilds[0]}) с HP <= 0 не удалились с карты`);
+          }
+
+          // 3. Проверка ресурсов
+          if (typeof wood !== 'undefined') {
+            if (wood[0] < 0) addBug('warning', 'Ресурсы', `Игрок: Дерево ушло в минус (${wood[0]})`);
+            if (wood[1] < 0) addBug('warning', 'Ресурсы', `Враг: Дерево ушло в минус (${wood[1]})`);
+          }
+          if (typeof minerals !== 'undefined') {
+            for (let k in minerals) {
+              if (minerals[k] < 0) addBug('warning', 'Ресурсы', `Игрок: Камень/Руда (${k}) ушли в минус (${minerals[k]})`);
+            }
+          }
+          if (typeof food !== 'undefined') {
+            if (food[0] < 0) addBug('warning', 'Ресурсы', `Игрок: Еда ушла в минус (${food[0]})`);
+          }
+
+          // 4. Проверка производительности и памяти
+          if (typeof sparks !== 'undefined' && sparks.length > 2500) {
+            addBug('warning', 'Память', `Утечка искр: на карте ${sparks.length} частиц (норма < 1500). Игра начнет лагать.`);
+          }
+          if (typeof animals !== 'undefined' && animals.length > 500) {
+            addBug('info', 'Лимиты', `Перенаселение животных: ${animals.length} штук`);
+          }
+
+          // 5. Проверка камеры
+          if (typeof zoom !== 'undefined') {
+            if (zoom <= 0.1 || !isFinite(zoom)) addBug('critical', 'Интерфейс', `Сломан зум: значение равно ${zoom}. Экран станет черным.`);
+          }
+
         } catch(e) {}
       }, 2000);
     });
 
-    console.log('Играем 5 минут...');
+    console.log('Ждем 5 минут...');
     await new Promise(r => setTimeout(r, 300000)); 
 
-    console.log('Сохраняем результат...');
+    console.log('Сбор результатов...');
     const foundBugs = await page.evaluate(() => window.__CLOUD_BUGS__);
     bugs = bugs.concat(foundBugs);
 
@@ -75,8 +126,7 @@ const fs = require('fs');
     await browser.close();
 
   } catch (err) {
-    // Если робот упал, записываем саму ошибку в файл, чтобы ты ее увидел
-    bugs.push({ sev: 'critical', cat: 'robot', msg: 'Ошибка робота: ' + err.message });
+    bugs.push({ sev: 'critical', cat: 'Робот', msg: 'Ошибка скрипта: ' + err.message });
     fs.writeFileSync('bugs.json', JSON.stringify(bugs, null, 2));
   }
 })();
