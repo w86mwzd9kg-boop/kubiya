@@ -1,0 +1,24 @@
+name: Bug Checker
+on:
+  schedule:
+    - cron: '*/25 * * * *'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - run: npm install puppeteer
+      - run: node bugcheck.js
+      - run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          git add bugs.json
+          git commit -m "Новые баги" || echo "No changes"
+          git push
