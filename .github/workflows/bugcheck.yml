@@ -1,5 +1,6 @@
 name: Bug Checker
 on:
+  push:
   schedule:
     - cron: '*/25 * * * *'
   workflow_dispatch:
