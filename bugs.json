@@ -1,1 +1,107 @@
-[]
+[
+  {
+    "sev": "warning",
+    "cat": "logic",
+    "msg": "Найдено 1 мертвых существ"
+  },
+  {
+    "sev": "warning",
+    "cat": "logic",
+    "msg": "Найдено 2 мертвых существ"
+  },
+  {
+    "sev": "warning",
+    "cat": "logic",
+    "msg": "Найдено 1 мертвых существ"
+  },
+  {
+    "sev": "warning",
+    "cat": "logic",
+    "msg": "Найдено 1 мертвых существ"
+  },
+  {
+    "sev": "warning",
+    "cat": "logic",
+    "msg": "Найдено 2 мертвых существ"
+  },
+  {
+    "sev": "warning",
+    "cat": "logic",
+    "msg": "Найдено 1 мертвых существ"
+  },
+  {
+    "sev": "warning",
+    "cat": "logic",
+    "msg": "Найдено 1 мертвых существ"
+  },
+  {
+    "sev": "warning",
+    "cat": "logic",
+    "msg": "Найдено 3 мертвых существ"
+  },
+  {
+    "sev": "warning",
+    "cat": "logic",
+    "msg": "Найдено 1 мертвых существ"
+  },
+  {
+    "sev": "warning",
+    "cat": "logic",
+    "msg": "Найдено 1 мертвых существ"
+  },
+  {
+    "sev": "warning",
+    "cat": "logic",
+    "msg": "Найдено 1 мертвых существ"
+  },
+  {
+    "sev": "warning",
+    "cat": "logic",
+    "msg": "Найдено 1 мертвых существ"
+  },
+  {
+    "sev": "warning",
+    "cat": "logic",
+    "msg": "Найдено 1 мертвых существ"
+  },
+  {
+    "sev": "warning",
+    "cat": "logic",
+    "msg": "Найдено 4 мертвых существ"
+  },
+  {
+    "sev": "warning",
+    "cat": "logic",
+    "msg": "Найдено 1 мертвых существ"
+  },
+  {
+    "sev": "warning",
+    "cat": "logic",
+    "msg": "Найдено 1 мертвых существ"
+  },
+  {
+    "sev": "warning",
+    "cat": "logic",
+    "msg": "Найдено 1 мертвых существ"
+  },
+  {
+    "sev": "warning",
+    "cat": "logic",
+    "msg": "Найдено 1 мертвых существ"
+  },
+  {
+    "sev": "warning",
+    "cat": "logic",
+    "msg": "Найдено 1 мертвых существ"
+  },
+  {
+    "sev": "warning",
+    "cat": "logic",
+    "msg": "Найдено 1 мертвых существ"
+  },
+  {
+    "sev": "warning",
+    "cat": "logic",
+    "msg": "Найдено 1 мертвых существ"
+  }
+]
