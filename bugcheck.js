@@ -28,12 +28,15 @@ const fs = require('fs');
 
     await new Promise(r => setTimeout(r, 2000));
 
-    console.log('Запуск 6 ботов-тестировщиков...');
+    console.log('Запуск умных ботов...');
     await page.evaluate(() => {
       window.__RUNTIME_BUGS__ = [];
+      
+      // Функция записи багов с защитой от спама (убираем цифры для сравнения)
       const addBug = (sev, cat, msg) => {
-        if (!window.__RUNTIME_BUGS__.some(b => b.msg === msg)) {
-          window.__RUNTIME_BUGS__.push({ sev, cat, msg });
+        const cleanMsg = msg.replace(/\d+/g, '#').replace(/\([^)]*\)/g, '');
+        if (!window.__RUNTIME_BUGS__.some(b => b.cleanMsg === cleanMsg)) {
+          window.__RUNTIME_BUGS__.push({ sev, cat, msg, cleanMsg });
         }
       };
 
@@ -47,12 +50,67 @@ const fs = require('fs');
       };
 
       const getBuildName = (type) => {
-        const names = {
-          cottage: 'Хижина', tent: 'Шатёр', warehouse: 'Склад', forge: 'Кузница', 
-          tavern: 'Таверна', tower: 'Башня', wallwood: 'Деревянная стена', wallstone: 'Каменная стена'
-        };
+        const names = { cottage: 'Хижина', tent: 'Шатёр', warehouse: 'Склад', forge: 'Кузница', tavern: 'Таверна', tower: 'Башня', wallwood: 'Деревянная стена', wallstone: 'Каменная стена' };
         return names[type] || type;
       };
+
+      // ==========================================
+      // ТРАССИРОВЩИК: Сообщаем боту, что мы рисуем прямо сейчас
+      // ==========================================
+      window.__CURRENT_DRAW__ = 'Неизвестный объект';
+      
+      const wrapDraw = (funcName, getNameFn) => {
+        if (typeof window[funcName] === 'function') {
+          const orig = window[funcName];
+          window[funcName] = function(obj) {
+            window.__CURRENT_DRAW__ = getNameFn(obj);
+            const res = orig.apply(this, arguments);
+            window.__CURRENT_DRAW__ = 'Неизвестный объект';
+            return res;
+          };
+        }
+      };
+
+      wrapDraw('paintBuild', b => `Здание (${getBuildName(b.type)})`);
+      wrapDraw('paintBeing', u => `Существо (${getEntityName(u)})`);
+      wrapDraw('paintTree', t => `Дерево (${t.type})`);
+      wrapDraw('paintRock', r => `Камень`);
+      wrapDraw('paintAnimal', a => `Животное (${a.type})`);
+      wrapDraw('paintUI', () => `Интерфейс/Кнопки`);
+
+      // ==========================================
+      // БОТ-ГРАФИК: Ловит сломанные координаты
+      // ==========================================
+      try {
+        const origFillRect = CanvasRenderingContext2D.prototype.fillRect;
+        CanvasRenderingContext2D.prototype.fillRect = function(x, y, w, h) {
+          if (isNaN(x) || isNaN(y) || isNaN(w) || isNaN(h)) {
+            addBug('critical', '👁 Графика', `Сломанные координаты (NaN) при отрисовке: ${window.__CURRENT_DRAW__}`);
+          } else if (w < 0 || h < 0) {
+            addBug('warning', '👁 Графика', `Отрицательный размер при отрисовке: ${window.__CURRENT_DRAW__}`);
+          } else if (x < -100 || x > WORLD_W + 100 || y < -100 || y > WORLD_H + 100) {
+            addBug('warning', '👁 Графика', `Улетел за пределы карты: ${window.__CURRENT_DRAW__}`);
+          }
+          return origFillRect.apply(this, arguments);
+        };
+      } catch(e) {}
+
+      // ==========================================
+      // БОТ-АРХИТЕКТОР (Проверка домов)
+      // ==========================================
+      try {
+        const origDrawChimney = window.drawChimney;
+        if (origDrawChimney) {
+          window.drawChimney = function(cx, topY, cw, chh, fl) {
+            if (isNaN(cx) || isNaN(topY) || isNaN(cw) || isNaN(chh)) {
+              addBug('critical', '🏠 Дома', `Проблема с моделькой: Дымоход открепился от дома (координаты NaN)`);
+            } else if (cw <= 0 || chh <= 0) {
+              addBug('warning', '🏠 Дома', `Проблема с моделькой: У дымохода сломан размер`);
+            }
+            return origDrawChimney.apply(this, arguments);
+          };
+        }
+      } catch(e) {}
 
       // --- ИГРОВАЯ СИМУЛЯЦИЯ ---
       setInterval(() => {
@@ -67,71 +125,16 @@ const fs = require('fs');
       }, 1000);
 
       // ==========================================
-      // БОТ-АРХИТЕКТОР: ПРОВЕРКА МОДЕЛЕК ДОМОВ (НОВОЕ!)
-      // ==========================================
-      try {
-        // 1. Перехватываем отрисовку самого здания
-        const origPaintBuild = window.paintBuild;
-        window.paintBuild = function(b) {
-          if (b) {
-            let name = getBuildName(b.type);
-            
-            // Проверка координат самого здания
-            if (!isFinite(b.x) || !isFinite(b.y)) {
-              addBug('critical', '🏠 Дома', `Проблема с моделькой: Дом (${name}) имеет сломанные координаты (NaN)`);
-            } else if (b.x < 0 || b.x > WORLD_W || b.y < 0 || b.y > WORLD_H) {
-              addBug('warning', '🏠 Дома', `Моделька дома (${name}) улетела за пределы карты`);
-            }
-            
-            // Проверка уровней
-            if (b.level > 3 || b.level < 1) {
-              addBug('critical', '🏠 Дома', `Проблема с моделькой: Дом (${name}) имеет неверный уровень (${b.level})`);
-            }
-          }
-          return origPaintBuild.apply(this, arguments);
-        };
-
-        // 2. Перехватываем отрисовку дымохода (чтобы ловить его "отвязывание")
-        const origDrawChimney = window.drawChimney;
-        if (origDrawChimney) {
-          window.drawChimney = function(cx, topY, cw, chh, fl) {
-            if (isNaN(cx) || isNaN(topY) || isNaN(cw) || isNaN(chh)) {
-              addBug('critical', '🏠 Дома', `Проблема с моделькой: Дымоход открепился от дома (координаты NaN)`);
-            } else if (cw <= 0 || chh <= 0) {
-              addBug('warning', '🏠 Дома', `Проблема с моделькой: У дымохода сломан размер (w:${cw}, h:${chh})`);
-            }
-            return origDrawChimney.apply(this, arguments);
-          };
-        }
-      } catch(e) {}
-
-      // ==========================================
-      // БОТ 1: ПЕРЕХВАТЧИК ГРАФИКИ (Общий)
-      // ==========================================
-      try {
-        const origFillRect = CanvasRenderingContext2D.prototype.fillRect;
-        CanvasRenderingContext2D.prototype.fillRect = function(x, y, w, h) {
-          if (isNaN(x) || isNaN(y) || isNaN(w) || isNaN(h)) {
-            addBug('critical', '👁 Графика', `Объект нарисован со сломанными координатами (NaN)!`);
-          } else if (w < 0 || h < 0) {
-            addBug('warning', '👁 Графика', `Объект нарисован с отрицательным размером (w:${w}, h:${h})`);
-          }
-          return origFillRect.apply(this, arguments);
-        };
-      } catch(e) {}
-
-      // ==========================================
-      // БОТ 2: ГЕЙМДИЗАЙНЕР (Экономика и правила)
+      // БОТ-ГЕЙМДИЗАЙНЕР (Экономика)
       // ==========================================
       setInterval(() => {
         try {
           if (typeof appState === 'undefined' || appState !== 'playing') return;
-          if (typeof wood !== 'undefined' && (wood[0] < 0 || wood[1] < 0)) addBug('critical', '⚙️ Геймдизайнер', `Дерево ушло в минус (Игрок: ${wood[0]}, Враг: ${wood[1]})`);
-          if (typeof food !== 'undefined' && (food[0] < 0 || food[1] < 0)) addBug('critical', '⚙️ Геймдизайнер', `Еда ушла в минус (Игрок: ${food[0]}, Враг: ${food[1]})`);
-          
+          if (typeof wood !== 'undefined' && (wood[0] < 0 || wood[1] < 0)) addBug('critical', '⚙️ Геймдизайнер', `Дерево ушло в минус: ${wood[0]}`);
+          if (typeof food !== 'undefined' && (food[0] < 0 || food[1] < 0)) addBug('critical', '⚙️ Геймдизайнер', `Еда ушла в минус: ${food[0]}`);
           if (typeof builds !== 'undefined') {
             for (let b of builds) {
-              if (b.hp > b.maxHp + 10) addBug('warning', '⚙️ Геймдизайнер', `У здания (${getBuildName(b.type)}) HP больше максимума (${b.hp}/${b.maxHp})`);
+              if (b.hp > b.maxHp + 10) addBug('warning', '⚙️ Геймдизайнер', `У здания (${getBuildName(b.type)}) HP больше максимума`);
               if (b.hp <= 0) addBug('warning', '⚙️ Геймдизайнер', `Дом (${getBuildName(b.type)}) сломан (HP < 0), но не исчез`);
             }
           }
@@ -139,7 +142,7 @@ const fs = require('fs');
       }, 2000);
 
       // ==========================================
-      // БОТ 3: ФИЗИК (Коллизии и застревания)
+      // БОТ-ФИЗИК (Застревания)
       // ==========================================
       setInterval(() => {
         try {
@@ -168,12 +171,12 @@ const fs = require('fs');
       }, 1500);
 
       // ==========================================
-      // БОТ 4: ОПТИМИЗАТОР (Лаги и память)
+      // БОТ-ОПТИМИЗАТОР (Память)
       // ==========================================
       setInterval(() => {
         try {
           if (typeof appState === 'undefined' || appState !== 'playing') return;
-          if (typeof sparks !== 'undefined' && sparks.length > 1500) addBug('warning', '🔥 Оптимизатор', `Утечка памяти: ${sparks.length} искр (будут лаги)`);
+          if (typeof sparks !== 'undefined' && sparks.length > 1500) addBug('warning', '🔥 Оптимизатор', `Утечка памяти: ${sparks.length} искр`);
           if (typeof hearts !== 'undefined' && hearts.length > 300) addBug('warning', '🔥 Оптимизатор', `Утечка памяти: ${hearts.length} сердечек`);
         } catch(e) {}
       }, 2000);
@@ -183,7 +186,7 @@ const fs = require('fs');
     console.log('Играем 10 минут...');
     await new Promise(r => setTimeout(r, 600000)); // 10 минут
 
-    const foundBugs = await page.evaluate(() => window.__RUNTIME_BUGS__);
+    const foundBugs = await page.evaluate(() => window.__RUNTIME_BUGS__.map(b => ({ sev: b.sev, cat: b.cat, msg: b.msg })));
     bugs = bugs.concat(foundBugs);
     fs.writeFileSync('bugs.json', JSON.stringify(bugs, null, 2));
     await browser.close();
