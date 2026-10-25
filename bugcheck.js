@@ -28,7 +28,7 @@ const fs = require('fs');
 
     await new Promise(r => setTimeout(r, 2000));
 
-    console.log('Запуск 5 ботов-тестировщиков...');
+    console.log('Запуск 6 ботов-тестировщиков...');
     await page.evaluate(() => {
       window.__RUNTIME_BUGS__ = [];
       const addBug = (sev, cat, msg) => {
@@ -46,7 +46,15 @@ const fs = require('fs');
         return u.type;
       };
 
-      // --- ИГРОВАЯ СИМУЛЯЦИЯ (Робот действует как игрок) ---
+      const getBuildName = (type) => {
+        const names = {
+          cottage: 'Хижина', tent: 'Шатёр', warehouse: 'Склад', forge: 'Кузница', 
+          tavern: 'Таверна', tower: 'Башня', wallwood: 'Деревянная стена', wallstone: 'Каменная стена'
+        };
+        return names[type] || type;
+      };
+
+      // --- ИГРОВАЯ СИМУЛЯЦИЯ ---
       setInterval(() => {
         try {
           if (typeof appState === 'undefined' || appState !== 'playing' || typeof WORLD_W === 'undefined') return;
@@ -59,21 +67,54 @@ const fs = require('fs');
       }, 1000);
 
       // ==========================================
-      // БОТ 1: ПЕРЕХВАТЧИК ГРАФИКИ (Ловит баги отрисовки)
+      // БОТ-АРХИТЕКТОР: ПРОВЕРКА МОДЕЛЕК ДОМОВ (НОВОЕ!)
       // ==========================================
       try {
-        // Перехватываем функцию рисования прямоугольников
+        // 1. Перехватываем отрисовку самого здания
+        const origPaintBuild = window.paintBuild;
+        window.paintBuild = function(b) {
+          if (b) {
+            let name = getBuildName(b.type);
+            
+            // Проверка координат самого здания
+            if (!isFinite(b.x) || !isFinite(b.y)) {
+              addBug('critical', '🏠 Дома', `Проблема с моделькой: Дом (${name}) имеет сломанные координаты (NaN)`);
+            } else if (b.x < 0 || b.x > WORLD_W || b.y < 0 || b.y > WORLD_H) {
+              addBug('warning', '🏠 Дома', `Моделька дома (${name}) улетела за пределы карты`);
+            }
+            
+            // Проверка уровней
+            if (b.level > 3 || b.level < 1) {
+              addBug('critical', '🏠 Дома', `Проблема с моделькой: Дом (${name}) имеет неверный уровень (${b.level})`);
+            }
+          }
+          return origPaintBuild.apply(this, arguments);
+        };
+
+        // 2. Перехватываем отрисовку дымохода (чтобы ловить его "отвязывание")
+        const origDrawChimney = window.drawChimney;
+        if (origDrawChimney) {
+          window.drawChimney = function(cx, topY, cw, chh, fl) {
+            if (isNaN(cx) || isNaN(topY) || isNaN(cw) || isNaN(chh)) {
+              addBug('critical', '🏠 Дома', `Проблема с моделькой: Дымоход открепился от дома (координаты NaN)`);
+            } else if (cw <= 0 || chh <= 0) {
+              addBug('warning', '🏠 Дома', `Проблема с моделькой: У дымохода сломан размер (w:${cw}, h:${chh})`);
+            }
+            return origDrawChimney.apply(this, arguments);
+          };
+        }
+      } catch(e) {}
+
+      // ==========================================
+      // БОТ 1: ПЕРЕХВАТЧИК ГРАФИКИ (Общий)
+      // ==========================================
+      try {
         const origFillRect = CanvasRenderingContext2D.prototype.fillRect;
         CanvasRenderingContext2D.prototype.fillRect = function(x, y, w, h) {
           if (isNaN(x) || isNaN(y) || isNaN(w) || isNaN(h)) {
             addBug('critical', '👁 Графика', `Объект нарисован со сломанными координатами (NaN)!`);
           } else if (w < 0 || h < 0) {
             addBug('warning', '👁 Графика', `Объект нарисован с отрицательным размером (w:${w}, h:${h})`);
-          } else {
-             // Ищем "отвязанные" объекты (например, дымоход), улетевшие за край карты
-             if (x < -100 || x > WORLD_W + 100 || y < -100 || y > WORLD_H + 100) {
-                addBug('warning', '👁 Графика', `Объект (${w}x${h}) нарисован за пределами карты (x:${Math.round(x)}, y:${Math.round(y)})`);
-             }
           }
           return origFillRect.apply(this, arguments);
         };
@@ -90,8 +131,8 @@ const fs = require('fs');
           
           if (typeof builds !== 'undefined') {
             for (let b of builds) {
-              if (b.level > 3 || b.level < 1) addBug('critical', '⚙️ Геймдизайнер', `Сломан уровень здания (${b.type}): ур. ${b.level}`);
-              if (b.hp > b.maxHp + 10) addBug('warning', '⚙️ Геймдизайнер', `У здания (${b.type}) HP больше максимума (${b.hp}/${b.maxHp})`);
+              if (b.hp > b.maxHp + 10) addBug('warning', '⚙️ Геймдизайнер', `У здания (${getBuildName(b.type)}) HP больше максимума (${b.hp}/${b.maxHp})`);
+              if (b.hp <= 0) addBug('warning', '⚙️ Геймдизайнер', `Дом (${getBuildName(b.type)}) сломан (HP < 0), но не исчез`);
             }
           }
         } catch(e) {}
@@ -136,18 +177,6 @@ const fs = require('fs');
           if (typeof hearts !== 'undefined' && hearts.length > 300) addBug('warning', '🔥 Оптимизатор', `Утечка памяти: ${hearts.length} сердечек`);
         } catch(e) {}
       }, 2000);
-
-      // ==========================================
-      // БОТ 5: АУДИТОР КОДА (Проверка ловушек в переменных)
-      // ==========================================
-      setInterval(() => {
-         try {
-           // Проверка зума
-           if (typeof zoom !== 'undefined' && (isNaN(zoom) || zoom <= 0.01)) addBug('critical', '👁 Графика', `Сломался зум камеры (${zoom}). Экран черный.`);
-           // Проверка камеры
-           if (typeof camX !== 'undefined' && isNaN(camX)) addBug('critical', '👁 Графика', `Координата камеры X сломалась (NaN)`);
-         } catch(e) {}
-      }, 1000);
 
     });
 
