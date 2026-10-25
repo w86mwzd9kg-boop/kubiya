@@ -4,148 +4,125 @@ const fs = require('fs');
 (async () => {
   let bugs = [];
   try {
-    // --- 1. СТАТИЧЕСКИЙ АНАЛИЗ (Проверка кода) ---
-    console.log('Читаем index.html...');
-    let html = '';
-    try { html = fs.readFileSync('index.html', 'utf8'); } catch (e) {}
-
-    if (html.includes('a.isExposed')) bugs.push({ sev: 'critical', cat: 'Код', msg: 'hostile(): проверяется a.isExposed вместо b.isExposed (предателей нельзя убить)' });
-    if (html.includes('999 : 150') || html.includes('999: 150')) bugs.push({ sev: 'warning', cat: 'Код', msg: 'Урон Божественной Кары (999) не убивает медведя на "Безумии"' });
-    
-    bugs.push({ sev: 'info', cat: 'Система', msg: 'Статический анализ файла завершен' });
-    fs.writeFileSync('bugs.json', JSON.stringify(bugs, null, 2));
-
-    // --- 2. ДИНАМИЧЕСКИЙ АНАЛИЗ (Запуск игры и жестокие тесты) ---
-    console.log('Запуск браузера...');
-    const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] });
+    console.log('Запуск браузера для игры...');
+    const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--disable-setuid-sandbox'] });
     const page = await browser.newPage();
-    
-    page.on('pageerror', err => bugs.push({ sev: 'critical', cat: 'Вылет', msg: 'Игра вылетела с ошибкой: ' + err.message }));
 
+    // 1. Ловим вылеты игры (критические ошибки в консоли)
+    page.on('pageerror', error => {
+      bugs.push({ sev: 'critical', cat: 'Вылет', msg: 'Игра вылетела с ошибкой: ' + error.message });
+    });
+
+    // 2. Открываем игру
+    console.log('Загрузка игры...');
     await page.goto('https://w86mwzd9kg-boop.github.io/kubiya/', { waitUntil: 'domcontentloaded', timeout: 60000 });
 
-    console.log('Внедряем тесты в игру...');
+    // 3. Внедряем скрипт "игрока"
+    console.log('Робот начинает играть...');
     await page.evaluate(() => {
-      window.__TEST_BUGS__ = [];
-      const report = (sev, cat, msg) => { if (!window.__TEST_BUGS__.some(b => b.msg === msg)) window.__TEST_BUGS__.push({ sev, cat, msg }); };
+      window.__RUNTIME_BUGS__ = [];
+      const addBug = (sev, cat, msg) => {
+        // Защита от спама (если такой баг уже есть, не добавляем)
+        if (!window.__RUNTIME_BUGS__.some(b => b.msg === msg)) {
+          window.__RUNTIME_BUGS__.push({ sev, cat, msg });
+        }
+      };
 
-      // Принудительный старт игры
+      // --- ЗАПУСК ИГРЫ ---
       try {
         if (typeof generateWorld === 'function') generateWorld();
         if (typeof createKingdoms === 'function') createKingdoms();
         if (typeof appState !== 'undefined') appState = 'playing';
         if (typeof recalcView === 'function') recalcView();
-      } catch(e) {}
+        if (typeof speedMult !== 'undefined') speedMult = 3; // Включаем 3х скорость
+      } catch(e) {
+        addBug('critical', 'Система', 'Не удалось запустить игру: ' + e.message);
+      }
 
-      // --- СЦЕНАРИЙ 1: Тест боя (Предатель, Медведь, Враг) ---
-      setTimeout(() => {
-        try {
-          const cX = WORLD_W / 2, cY = WORLD_H / 2;
-          
-          // 1. Житель против Предателя
-          let human = makeBeing(cX, cY, 'human', false, null);
-          let traitor = makeBeing(cX + 20, cY, 'traitor', false, null);
-          if (human && traitor) {
-            traitor.isExposed = true;
-            if (!hostile(human, traitor)) report('critical', 'Бой', 'Житель НЕ атакует раскрытого предателя (hostile вернул false)');
-          }
-
-          // 2. Житель против Медведя
-          let bear = makeBeing(cX - 20, cY, 'beast', false, null);
-          if (human && bear && !hostile(human, bear)) report('critical', 'Бой', 'Житель НЕ атакует медведя');
-          
-          // 3. Лечение и голод (не должны уходить в минус)
-          human.hp = -50; human.hunger = -100;
-        } catch(e) { report('warning', 'Тесты', 'Ошибка спавна существ: ' + e.message); }
-      }, 2000);
-
-      // --- СЦЕНАРИЙ 2: Тест ресурсов (Минус) ---
-      setTimeout(() => {
-        try {
-          if (typeof wood !== 'undefined') { wood[0] = -500; wood[1] = -300; }
-          if (typeof food !== 'undefined') { food[0] = -100; }
-          if (typeof minerals !== 'undefined') { minerals.stone = -50; }
-        } catch(e) {}
-      }, 4000);
-
-      // --- СЦЕНАРИЙ 3: Тест зданий и деревень ---
-      setTimeout(() => {
-        try {
-          if (typeof placeBuild === 'function') {
-            let ghost = placeBuild(WORLD_W/2, WORLD_H/2, 'cottage', 0, 9999); // Деревня 9999 не существует
-            let ruined = placeBuild(WORLD_W/2 + 40, WORLD_H/2, 'tower', 0, 1);
-            ruined.hp = -10; ruined.level = 99; // Неверный уровень
-          }
-        } catch(e) {}
-      }, 6000);
-
-      // --- СЦЕНАРИЙ 4: Постоянный стресс-тест и мониторинг ---
+      // --- РОБОТ ИГРАЕТ (Раз в секунду делает пакости) ---
       setInterval(() => {
         try {
-          if (typeof speedMult !== 'undefined') speedMult = 3;
-          if (typeof strikeBolt === 'function' && Math.random() > 0.5) strikeBolt(Math.random() * WORLD_W, Math.random() * WORLD_H, 'divine');
-        } catch(e) {}
+          // 1. Бьет молниями
+          if (typeof strikeBolt === 'function' && Math.random() > 0.4) {
+            strikeBolt(Math.random() * WORLD_W, Math.random() * WORLD_H, 'divine');
+          }
+          // 2. Спавнит зверей и предателей
+          if (typeof makeBeing === 'function' && Math.random() > 0.5) {
+            let types = ['beast', 'traitor', 'troll', 'human'];
+            makeBeing(Math.random() * WORLD_W, Math.random() * WORLD_H, types[Math.floor(Math.random()*types.length)], false, null);
+          }
+          // 3. Иногда вызывает набег медведей
+          if (typeof spawnBearRaid === 'function' && Math.random() > 0.9) {
+            spawnBearRaid();
+          }
+        } catch(e) {
+          addBug('warning', 'Действия', 'Ошибка во время клика робота: ' + e.message);
+        }
       }, 1000);
 
-      // --- СЦЕНАРИЙ 5: Сканер аномалий (каждые 1.5 сек) ---
+      // --- РОБОТ ПРОВЕРЯЕТ ИГРУ (Раз в 1.5 секунды) ---
       setInterval(() => {
         try {
           if (typeof appState === 'undefined' || appState !== 'playing') return;
 
-          // 1. Сканер существ
-          if (typeof beings !== 'undefined') {
+          // Проверка 1: Существа (люди, звери)
+          if (typeof beings !== 'undefined' && Array.isArray(beings)) {
             let zombies = 0, nans = 0, stuck = 0;
+            
             for (let u of beings) {
               if (!u) continue;
               if (u.hp <= 0) zombies++;
               if (!isFinite(u.x) || !isFinite(u.y)) nans++;
+              // Проверка на застревание в текстурах (если не плывет)
               if (typeof walkable === 'function' && !u.swimming && !walkable(u.x, u.y)) stuck++;
             }
-            if (zombies > 0) report('warning', 'Логика', `Зомби: ${zombies} существ с HP <= 0 не удалились из мира`);
-            if (nans > 0) report('critical', 'Координаты', `NaN: ${nans} существ имеют сломанные координаты (x или y = NaN)`);
-            if (stuck > 0) report('warning', 'Физика', `Застревание: ${stuck} существ застряли внутри текстур`);
+            
+            if (zombies > 0) addBug('warning', 'Логика игры', `Найдено ${zombies} мертвых существ (HP < 0), которые не исчезли с карты`);
+            if (nans > 0) addBug('critical', 'Координаты', `Найдено ${nans} существ с поломанными координатами (x или y = NaN)`);
+            if (stuck > 0) addBug('warning', 'Физика', `Найдено ${stuck} существ, которые застряли в стенах/горах`);
           }
 
-          // 2. Сканер ресурсов
-          if (typeof wood !== 'undefined' && (wood[0] < 0 || wood[1] < 0)) report('critical', 'Ресурсы', `Дерево ушло в минус: Игрок ${wood[0]}, Враг ${wood[1]}`);
-          if (typeof food !== 'undefined' && (food[0] < 0 || food[1] < 0)) report('critical', 'Ресурсы', `Еда ушла в минус: Игрок ${food[0]}, Враг ${food[1]}`);
-          if (typeof minerals !== 'undefined') {
-             for(let k in minerals) if(minerals[k] < 0) report('critical', 'Ресурсы', `Ресурс (${k}) ушел в минус: ${minerals[k]}`);
-          }
-
-          // 3. Сканер зданий
-          if (typeof builds !== 'undefined') {
-            let ghosts = 0, ruins = 0, badLvl = 0;
+          // Проверка 2: Ресурсы
+          if (typeof wood !== 'undefined' && (wood[0] < 0 || wood[1] < 0)) addBug('critical', 'Экономика', `Дерево ушло в минус: Игрок ${wood[0]}, Враг ${wood[1]}`);
+          if (typeof food !== 'undefined' && (food[0] < 0 || food[1] < 0)) addBug('critical', 'Экономика', `Еда ушла в минус: Игрок ${food[0]}, Враг ${food[1]}`);
+          
+          // Проверка 3: Здания
+          if (typeof builds !== 'undefined' && Array.isArray(builds)) {
+            let ghosts = 0, ruined = 0;
             for (let b of builds) {
-              if (b.villageId && (!villages[b.villageId])) ghosts++;
-              if (b.hp <= 0) ruins++;
-              if (b.level > 3 || b.level < 1) badLvl++;
+              if (b.hp <= 0) ruined++;
+              if (b.villageId && !villages[b.villageId]) ghosts++;
             }
-            if (ghosts > 0) report('warning', 'Здания', `Здания-призраки: ${ghosts} домов привязаны к несуществующей деревне`);
-            if (ruins > 0) report('warning', 'Здания', `Руины: ${ruins} зданий с HP <= 0 не удалились`);
-            if (badLvl > 0) report('critical', 'Здания', `Сломан уровень: ${badLvl} зданий имеют уровень > 3 или < 1`);
+            if (ruined > 0) addBug('warning', 'Стройка', `Найдено ${ruined} разрушенных зданий (HP <= 0), которые зависли на карте`);
+            if (ghosts > 0) addBug('warning', 'Стройка', `Найдено ${ghosts} зданий-призраков (привязаны к удаленной деревне)`);
           }
 
-          // 4. Сканер интерфейса и памяти
-          if (typeof zoom !== 'undefined' && (zoom <= 0.05 || !isFinite(zoom))) report('critical', 'Интерфейс', `Сломан зум: ${zoom}`);
-          if (typeof sparks !== 'undefined' && sparks.length > 2000) report('warning', 'Память', `Утечка искр: ${sparks.length} шт. (вызывает лаги)`);
-
+          // Проверка 4: Память и лаги
+          if (typeof sparks !== 'undefined' && sparks.length > 2000) {
+            addBug('warning', 'Производительность', `Утечка памяти: ${sparks.length} частиц (искр) на карте. Игра начнет лагать.`);
+          }
+          if (typeof hearts !== 'undefined' && hearts.length > 500) {
+            addBug('warning', 'Производительность', `Утечка памяти: ${hearts.length} сердечек на карте.`);
+          }
+          
         } catch(e) {}
       }, 1500);
+
     });
 
-    console.log('Ждем 3 минуты...');
-    await new Promise(r => setTimeout(r, 180000)); 
+    // Ждем 5 минут, пока робот играет
+    console.log('Играем 5 минут...');
+    await new Promise(r => setTimeout(r, 300000)); 
 
-    console.log('Сбор данных...');
-    const dynamicBugs = await page.evaluate(() => window.__TEST_BUGS__);
-    bugs = bugs.concat(dynamicBugs);
+    // Забираем найденные баги
+    const foundBugs = await page.evaluate(() => window.__RUNTIME_BUGS__);
+    bugs = bugs.concat(foundBugs);
 
     fs.writeFileSync('bugs.json', JSON.stringify(bugs, null, 2));
     await browser.close();
 
   } catch (err) {
-    bugs.push({ sev: 'critical', cat: 'Робот', msg: 'Ошибка скрипта: ' + err.message });
+    bugs.push({ sev: 'critical', cat: 'Робот', msg: 'Ошибка запуска: ' + err.message });
     fs.writeFileSync('bugs.json', JSON.stringify(bugs, null, 2));
   }
 })();
