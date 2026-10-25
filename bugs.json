@@ -1,842 +1,127 @@
 [
   {
-    "sev": "critical",
-    "cat": "Система",
-    "msg": "Не удалось запустить игру: Cannot read properties of null (reading 'fill')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2073')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1378')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1743')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '814')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '517')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '821')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1746')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '258')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1981')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1385')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2396')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1534')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2037')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '166')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2812')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1722')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1034')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '876')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '901')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1233')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '240')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '786')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '112')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1182')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '922')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '304')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2637')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2284')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '178')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1021')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '903')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2022')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '471')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '448')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2928')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '670')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1625')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '953')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '414')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2368')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '454')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1632')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2469')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1058')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '199')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1484')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2051')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1970')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '165')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1188')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1837')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '141')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2150')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2248')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2095')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2322')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1757')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '217')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2815')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '692')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2262')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1827')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1059')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2821')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2753')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1982')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2394')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1785')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '950')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '702')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1296')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1535')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2094')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2131')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '671')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '452')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '140')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '924')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1681')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '269')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1475')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2443')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '826')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '491')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1504')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '626')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2561')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '864')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2718')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '90')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1602')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1343')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1339')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1082')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2405')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '481')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1107')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1411')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2728')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1314')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '150')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1553')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2616')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '102')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2269')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '842')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1327')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2358')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1937')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '314')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1959')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2683')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2243')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2744')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '887')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2159')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1431')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '244')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '772')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '783')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1619')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2124')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1027')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2143')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '214')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2275')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1631')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '695')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2512')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1091')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '679')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1031')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '875')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2819')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2916')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1329')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2390')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1557')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2237')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '636')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '506')"
-  },
-  {
-    "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2863')"
-  },
-  {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1521')"
+    "cat": "Физика",
+    "msg": "Найдено 1 существ, застрявших в текстурах"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2738')"
+    "cat": "Физика",
+    "msg": "Найдено 2 существ, застрявших в текстурах"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '113')"
+    "cat": "Логика игры",
+    "msg": "Найдено 2 мертвых существ (HP < 0) на карте"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '406')"
+    "cat": "Логика игры",
+    "msg": "Найдено 13 мертвых существ (HP < 0) на карте"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1670')"
+    "cat": "Логика игры",
+    "msg": "Найдено 1 мертвых существ (HP < 0) на карте"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '73')"
+    "cat": "Стройка",
+    "msg": "Найдено 1 разрушенных зданий (HP < 0)"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '651')"
+    "cat": "Логика игры",
+    "msg": "Найдено 5 мертвых существ (HP < 0) на карте"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2902')"
+    "cat": "Физика",
+    "msg": "Найдено 3 существ, застрявших в текстурах"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1863')"
+    "cat": "Физика",
+    "msg": "Найдено 6 существ, застрявших в текстурах"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1986')"
+    "cat": "Физика",
+    "msg": "Найдено 5 существ, застрявших в текстурах"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2761')"
+    "cat": "Физика",
+    "msg": "Найдено 4 существ, застрявших в текстурах"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '473')"
+    "cat": "Физика",
+    "msg": "Найдено 7 существ, застрявших в текстурах"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2058')"
+    "cat": "Физика",
+    "msg": "Найдено 10 существ, застрявших в текстурах"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1108')"
+    "cat": "Физика",
+    "msg": "Найдено 18 существ, застрявших в текстурах"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2112')"
+    "cat": "Физика",
+    "msg": "Найдено 19 существ, застрявших в текстурах"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '694')"
+    "cat": "Физика",
+    "msg": "Найдено 9 существ, застрявших в текстурах"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '46')"
+    "cat": "Физика",
+    "msg": "Найдено 13 существ, застрявших в текстурах"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2163')"
+    "cat": "Физика",
+    "msg": "Найдено 11 существ, застрявших в текстурах"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1782')"
+    "cat": "Физика",
+    "msg": "Найдено 12 существ, застрявших в текстурах"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2323')"
+    "cat": "Физика",
+    "msg": "Найдено 14 существ, застрявших в текстурах"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '2516')"
+    "cat": "Физика",
+    "msg": "Найдено 16 существ, застрявших в текстурах"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '276')"
+    "cat": "Физика",
+    "msg": "Найдено 8 существ, застрявших в текстурах"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '1658')"
+    "cat": "Логика игры",
+    "msg": "Найдено 4 мертвых существ (HP < 0) на карте"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '672')"
+    "cat": "Логика игры",
+    "msg": "Найдено 32 мертвых существ (HP < 0) на карте"
   },
   {
     "sev": "warning",
-    "cat": "Действия",
-    "msg": "Ошибка во время клика робота: Cannot read properties of null (reading '894')"
+    "cat": "Логика игры",
+    "msg": "Найдено 3 мертвых существ (HP < 0) на карте"
   }
 ]
