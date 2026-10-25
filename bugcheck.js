@@ -9,7 +9,7 @@ const fs = require('fs');
     const page = await browser.newPage();
 
     page.on('pageerror', error => {
-      bugs.push({ sev: 'critical', cat: 'Вылет', msg: 'Игра вылетела с ошибкой: ' + error.message });
+      bugs.push({ sev: 'critical', cat: '🚨 Вылет', msg: 'Игра вылетела с ошибкой: ' + error.message });
     });
 
     console.log('Открываем игру...');
@@ -30,9 +30,11 @@ const fs = require('fs');
 
     await new Promise(r => setTimeout(r, 2000));
 
-    console.log('Робот начинает играть и проверять...');
+    console.log('Команда ботов приступила к работе...');
     await page.evaluate(() => {
       window.__RUNTIME_BUGS__ = [];
+      
+      // Универсальная функция записи багов
       const addBug = (sev, cat, msg) => {
         if (!window.__RUNTIME_BUGS__.some(b => b.msg === msg)) {
           window.__RUNTIME_BUGS__.push({ sev, cat, msg });
@@ -51,13 +53,11 @@ const fs = require('fs');
         return u.type;
       };
 
-      // --- РОБОТ ИГРАЕТ ---
+      // Робот играет (имитация действий игрока)
       setInterval(() => {
         try {
           if (typeof appState === 'undefined' || appState !== 'playing' || typeof WORLD_W === 'undefined') return;
-          if (typeof strikeBolt === 'function' && Math.random() > 0.4) {
-            strikeBolt(Math.random() * WORLD_W, Math.random() * WORLD_H, 'divine');
-          }
+          if (typeof strikeBolt === 'function' && Math.random() > 0.4) strikeBolt(Math.random() * WORLD_W, Math.random() * WORLD_H, 'divine');
           if (typeof makeBeing === 'function' && Math.random() > 0.5) {
             let types = ['beast', 'traitor', 'troll', 'human'];
             makeBeing(Math.random() * WORLD_W, Math.random() * WORLD_H, types[Math.floor(Math.random()*types.length)], false, null);
@@ -65,70 +65,106 @@ const fs = require('fs');
         } catch(e) {}
       }, 1000);
 
-      // --- УМНАЯ ПРОВЕРКА ---
+      // ==========================================
+      // БОТ 1: МОДЕЛЬЕР (Проверка визуала и моделей)
+      // ==========================================
+      setInterval(() => {
+        try {
+          if (typeof appState === 'undefined' || appState !== 'playing') return;
+          
+          if (typeof beings !== 'undefined') {
+            for (let u of beings) {
+              if (!u) continue;
+              let name = getEntityName(u);
+              if (isNaN(u.size) || u.size <= 0) addBug('critical', '🤖 Модельер', `У существа (${name}) сломан размер модельки (size = ${u.size})`);
+              if (u.x < 0 || u.x > WORLD_W || u.y < 0 || u.y > WORLD_H) addBug('warning', '🤖 Модельер', `Существо (${name}) вышло за пределы карты`);
+            }
+          }
+          if (typeof zoom !== 'undefined' && (isNaN(zoom) || zoom <= 0.01)) {
+             addBug('critical', '🤖 Модельер', `Сломался зум камеры (zoom = ${zoom}). Экран станет черным.`);
+          }
+        } catch(e) {}
+      }, 1500);
+
+      // ==========================================
+      // БОТ 2: ГЕЙМДИЗАЙНЕР (Проверка правил и механик)
+      // ==========================================
       setInterval(() => {
         try {
           if (typeof appState === 'undefined' || appState !== 'playing') return;
 
-          if (typeof beings !== 'undefined' && Array.isArray(beings)) {
-            let zombies = [], nans = [], stuckInTree = [], stuckInRock = [], stuckInWater = [], stuckInMountain = [];
+          // Ресурсы в минус
+          if (typeof wood !== 'undefined' && (wood[0] < 0 || wood[1] < 0)) addBug('critical', '⚙️ Геймдизайнер', `Сломана экономика: дерево ушло в минус (Игрок: ${wood[0]}, Враг: ${wood[1]})`);
+          if (typeof food !== 'undefined' && (food[0] < 0 || food[1] < 0)) addBug('critical', '⚙️ Геймдизайнер', `Сломана экономика: еда ушла в минус (Игрок: ${food[0]}, Враг: ${food[1]})`);
+          
+          // Здоровье и здания
+          if (typeof builds !== 'undefined') {
+            for (let b of builds) {
+              if (b.level > 3 || b.level < 1) addBug('critical', '⚙️ Геймдизайнер', `Сломан уровень здания (${b.type}): уровень ${b.level}`);
+              if (b.hp > b.maxHp + 10) addBug('warning', '⚙️ Геймдизайнер', `У здания (${b.type}) здоровье больше максимума (${b.hp}/${b.maxHp})`);
+            }
+          }
 
+          // Мертвые юниты
+          if (typeof beings !== 'undefined') {
+            let deadCount = 0;
+            for (let u of beings) if (u && u.hp <= 0) deadCount++;
+            if (deadCount > 0) addBug('warning', '⚙️ Геймдизайнер', `В мире зависли мертвые юниты (HP < 0): ${deadCount} шт.`);
+          }
+        } catch(e) {}
+      }, 2000);
+
+      // ==========================================
+      // БОТ 3: ФИЗИК (Проверка коллизий и застреваний)
+      // ==========================================
+      setInterval(() => {
+        try {
+          if (typeof appState === 'undefined' || appState !== 'playing') return;
+
+          if (typeof beings !== 'undefined') {
+            let stuckTree = [], stuckRock = [], stuckWater = [], stuckMountain = [];
+            
             for (let u of beings) {
-              if (!u) continue;
+              if (!u || !isFinite(u.x) || !isFinite(u.y) || u.swimming) continue;
               let name = getEntityName(u);
+              let tx = Math.floor(u.x / 26);
+              let ty = Math.floor(u.y / 26);
+              let tile = tiles[ty * 64 + tx];
 
-              if (u.hp <= 0) { if (!zombies.includes(name)) zombies.push(name); }
-              if (!isFinite(u.x) || !isFinite(u.y)) { if (!nans.includes(name)) nans.push(name); continue; }
-
-              if (typeof walkable === 'function' && !u.swimming) {
-                let tx = Math.floor(u.x / 26);
-                let ty = Math.floor(u.y / 26);
-                let tile = tiles[ty * 64 + tx];
-
-                if (tile === 1) { if(!stuckInWater.includes(name)) stuckInWater.push(name); }
-                else if (tile === 2) { if(!stuckInMountain.includes(name)) stuckInMountain.push(name); }
-                else {
-                  let inTree = false;
-                  for (let t of trees) { if (Math.hypot(t.x - u.x, t.y - u.y) < u.size + 5) { inTree = true; break; } }
-                  if (inTree) { if(!stuckInTree.includes(name)) stuckInTree.push(name); }
-                  
-                  if (!inTree) {
-                    let inRock = false;
-                    for (let r of rocks) { if (Math.hypot(r.x - u.x, r.y - u.y) < u.size + 5) { inRock = true; break; } }
-                    if (inRock) { if(!stuckInRock.includes(name)) stuckInRock.push(name); }
-                  }
-                }
+              if (tile === 1) { if(!stuckWater.includes(name)) stuckWater.push(name); }
+              else if (tile === 2) { if(!stuckMountain.includes(name)) stuckMountain.push(name); }
+              else {
+                for (let t of trees) { if (Math.hypot(t.x - u.x, t.y - u.y) < u.size) { if(!stuckTree.includes(name)) stuckTree.push(name); break; } }
+                for (let r of rocks) { if (Math.hypot(r.x - u.x, r.y - u.y) < u.size) { if(!stuckRock.includes(name)) stuckRock.push(name); break; } }
               }
             }
 
-            if (zombies.length > 0) addBug('warning', 'Смерть', `Мертвые существа (${zombies.join(', ')}) с HP < 0 не исчезли с карты`);
-            if (nans.length > 0) addBug('critical', 'Координаты', `Существа (${nans.join(', ')}) провалились в "пустоту" (координаты NaN)`);
-            if (stuckInTree.length > 0) addBug('warning', 'Застревание', `Существа (${stuckInTree.join(', ')}) застряли внутри дерева`);
-            if (stuckInRock.length > 0) addBug('warning', 'Застревание', `Существа (${stuckInRock.join(', ')}) застряли внутри камня/валуна`);
-            if (stuckInWater.length > 0) addBug('warning', 'Физика', `Существа (${stuckInWater.join(', ')}) застряли в воде (утонули, но не плывут)`);
-            if (stuckInMountain.length > 0) addBug('warning', 'Физика', `Существа (${stuckInMountain.join(', ')}) застряли внутри горы`);
+            if (stuckTree.length > 0) addBug('warning', '🧱 Физик', `Существа (${stuckTree.join(', ')}) застряли внутри дерева`);
+            if (stuckRock.length > 0) addBug('warning', '🧱 Физик', `Существа (${stuckRock.join(', ')}) застряли внутри камня`);
+            if (stuckWater.length > 0) addBug('warning', '🧱 Физик', `Существа (${stuckWater.join(', ')}) застряли в воде (не плывут)`);
+            if (stuckMountain.length > 0) addBug('warning', '🧱 Физик', `Существа (${stuckMountain.join(', ')}) застряли в горе`);
           }
-
-          if (typeof wood !== 'undefined' && (wood[0] < 0 || wood[1] < 0)) addBug('critical', 'Экономика', `Дерево ушло в минус: Игрок ${wood[0]}, Враг ${wood[1]}`);
-          if (typeof food !== 'undefined' && (food[0] < 0 || food[1] < 0)) addBug('critical', 'Экономика', `Еда ушла в минус: Игрок ${food[0]}, Враг ${food[1]}`);
-          
-          if (typeof builds !== 'undefined' && Array.isArray(builds)) {
-            let ghosts = 0, ruined = 0;
-            for (let b of builds) {
-              if (b.hp <= 0) ruined++;
-              if (b.villageId && !villages[b.villageId]) ghosts++;
-            }
-            if (ruined > 0) addBug('warning', 'Стройка', `Найдено ${ruined} разрушенных зданий (HP < 0), они не исчезли`);
-            if (ghosts > 0) addBug('warning', 'Стройка', `Найдено ${ghosts} зданий-призраков (дом есть, а деревни нет)`);
-          }
-
-          if (typeof sparks !== 'undefined' && sparks.length > 2000) addBug('warning', 'Память', `Утечка искр (${sparks.length}). Игра начнет лагать.`);
-          
         } catch(e) {}
       }, 1500);
+
+      // ==========================================
+      // БОТ 4: ОПТИМИЗАТОР (Утечки памяти и лаги)
+      // ==========================================
+      setInterval(() => {
+        try {
+          if (typeof appState === 'undefined' || appState !== 'playing') return;
+          
+          if (typeof sparks !== 'undefined' && sparks.length > 1500) addBug('warning', '🔥 Оптимизатор', `Утечка памяти: на карте ${sparks.length} искр (может вызвать лаги)`);
+          if (typeof hearts !== 'undefined' && hearts.length > 300) addBug('warning', '🔥 Оптимизатор', `Утечка памяти: на карте ${hearts.length} сердечек`);
+          if (typeof trees !== 'undefined' && trees.length > 600) addBug('info', '🔥 Оптимизатор', `Слишком много деревьев на карте: ${trees.length} (лимит движка 500)`);
+          if (typeof animals !== 'undefined' && animals.length > 400) addBug('info', '🔥 Оптимизатор', `Перенаселение животных: ${animals.length} шт.`);
+          
+        } catch(e) {}
+      }, 2000);
+
     });
 
-    console.log('Играем 10 минут...');
+    console.log('Играем 10 минут. Боты работают...');
     await new Promise(r => setTimeout(r, 600000)); // 10 минут
 
     const foundBugs = await page.evaluate(() => window.__RUNTIME_BUGS__);
@@ -139,7 +175,7 @@ const fs = require('fs');
     console.log('Готово!');
 
   } catch (err) {
-    bugs.push({ sev: 'critical', cat: 'Робот', msg: 'Ошибка запуска: ' + err.message });
+    bugs.push({ sev: 'critical', cat: '🚨 Система', msg: 'Ошибка запуска: ' + err.message });
     fs.writeFileSync('bugs.json', JSON.stringify(bugs, null, 2));
   }
 })();
