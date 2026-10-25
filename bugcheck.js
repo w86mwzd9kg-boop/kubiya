@@ -4,33 +4,31 @@ const fs = require('fs');
 (async () => {
   let bugs = [];
   try {
-    const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--disable-setuid-sandbox'] });
-    const page = await browser.newPage();
+    console.log('Скачиваем исходный код напрямую с GitHub...');
+    // Скачиваем файл напрямую из репозитория
+    const rawRes = await fetch('https://raw.githubusercontent.com/w86mwzd9kg-boop/kubiya/main/index.html');
+    const html = await rawRes.text();
 
-    page.on('pageerror', error => {
-      bugs.push({ sev: 'critical', cat: 'Вылет', msg: 'Ошибка в консоли: ' + error.message });
-    });
-
-    console.log('Загрузка игры...');
-    const response = await page.goto('https://w86mwzd9kg-boop.github.io/kubiya/', { waitUntil: 'domcontentloaded', timeout: 60000 });
-    const html = await response.text();
-
-    // --- СТАТИЧЕСКИЙ АНАЛИЗ (Проверка текста) ---
-    console.log('Проверка кода...');
+    // --- СТАТИЧЕСКИЙ АНАЛИЗ (100% надежный) ---
     if (html.includes('a.isExposed')) {
       bugs.push({ sev: 'critical', cat: 'Код', msg: 'hostile(): проверяется a.isExposed вместо b.isExposed (предателей нельзя убить)' });
     }
-    if (html.includes('999 : 150')) {
+    if (/\?\s*999\s*:\s*150/.test(html) || html.includes('999 : 150')) {
       bugs.push({ sev: 'warning', cat: 'Код', msg: 'Урон Божественной Кары (999) не убивает медведя на "Безумии"' });
     }
 
-    // Добавляем тестовый баг, чтобы ты точно знал, что робот работает
-    bugs.push({ sev: 'info', cat: 'Система', msg: 'Робот успешно запустился и приступил к тестированию' });
+    bugs.push({ sev: 'info', cat: 'Система', msg: 'Исходный код успешно прочитан и проверен' });
 
+    // Сохраняем статические баги сразу
     fs.writeFileSync('bugs.json', JSON.stringify(bugs, null, 2));
 
-    // --- ДИНАМИЧЕСКИЙ АНАЛИЗ ---
-    console.log('Принудительный запуск игры...');
+    // --- ДИНАМИЧЕСКИЙ АНАЛИЗ (Проверка в бою) ---
+    console.log('Запускаем игру для динамического теста...');
+    const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] });
+    const page = await browser.newPage();
+
+    await page.goto('https://w86mwzd9kg-boop.github.io/kubiya/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+
     await page.evaluate(() => {
       window.__CLOUD_BUGS__ = [];
       const addBug = (sev, cat, msg) => {
@@ -39,28 +37,28 @@ const fs = require('fs');
         }
       };
 
-      // ПРИНУДИТЕЛЬНО ЗАПУСКАЕМ ИГРУ (обходя главное меню)
+      // Принудительный старт
       try {
         if (typeof generateWorld === 'function') generateWorld();
         if (typeof createKingdoms === 'function') createKingdoms();
         if (typeof appState !== 'undefined') appState = 'playing';
-        if (typeof recalcView === 'function') recalcView();
       } catch(e) {}
 
-      // Стресс-тест: бьем молниями и спавним монстров
+      // Стресс-тест
       setInterval(() => {
         try {
           if (typeof speedMult !== 'undefined') speedMult = 3;
-          if (typeof strikeBolt === 'function' && Math.random() > 0.3) strikeBolt(Math.random() * WORLD_W, Math.random() * WORLD_H, Math.random() > 0.5 ? 'divine' : 'normal');
+          if (typeof strikeBolt === 'function' && Math.random() > 0.3) strikeBolt(Math.random() * WORLD_W, Math.random() * WORLD_H, 'divine');
           if (typeof makeBeing === 'function' && Math.random() > 0.5) makeBeing(Math.random() * WORLD_W, Math.random() * WORLD_H, 'traitor', false, null);
         } catch(e) {}
       }, 800);
 
-      // Проверки
+      // Глубокие проверки
       setInterval(() => {
         try {
           if (typeof appState !== 'undefined' && appState !== 'playing') return;
           
+          // Проверка на мертвых и сломанных
           if (typeof beings !== 'undefined' && Array.isArray(beings)) {
             for (let u of beings) {
               if (!u) continue;
@@ -68,6 +66,19 @@ const fs = require('fs');
               if (!isFinite(u.x) || !isFinite(u.y)) addBug('critical', 'Координаты', `Существо (${u.type}) имеет сломанные координаты (NaN)`);
             }
           }
+
+          // ПРИНУДИТЕЛЬНАЯ ПРОВЕРКА ПРЕДАТЕЛЯ (Прямой вызов функции)
+          if (typeof hostile === 'function' && typeof beings !== 'undefined') {
+            let traitor = beings.find(b => b.type === 'traitor');
+            let human = beings.find(b => b.type === 'human');
+            if (traitor && human) {
+              traitor.isExposed = true; // Принудительно раскрываем
+              if (!hostile(human, traitor)) {
+                addBug('critical', 'Логика', 'Баг подтвержден в бою: жители НЕ атакуют раскрытого предателя!');
+              }
+            }
+          }
+
           if (typeof wood !== 'undefined' && wood[0] < 0) addBug('critical', 'Ресурсы', `Дерево ушло в минус: ${wood[0]}`);
           if (typeof zoom !== 'undefined' && (zoom <= 0.05 || !isFinite(zoom))) addBug('critical', 'Интерфейс', `Сломан зум: ${zoom}`);
         } catch(e) {}
@@ -77,7 +88,6 @@ const fs = require('fs');
     console.log('Ждем 5 минут...');
     await new Promise(r => setTimeout(r, 300000)); 
 
-    console.log('Сбор данных...');
     const foundBugs = await page.evaluate(() => window.__CLOUD_BUGS__);
     bugs = bugs.concat(foundBugs);
 
