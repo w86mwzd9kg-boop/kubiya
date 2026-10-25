@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="format-detection" content="telephone=no">
 <meta name="theme-color" content="#1a1030">
-<title>Кубия 3.5</title>
+<title>Кубия 3.6</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:-apple-system,'Trebuchet MS',sans-serif;color:#fff;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;position:fixed;top:0;left:0}
@@ -21,17 +21,18 @@ canvas{display:block;position:absolute;top:0;left:0}
 'use strict';
 
 var CHANGELOG=[
-  {version:'3.5.0',date:'25.10.2026',title:'Предатели и Божественная Кара',changes:[
-    {t:'new',text:'Добавлены Предатели (аристократы с ножами)'},
-    {t:'new',text:'Добавлена Божественная Кара (мощная молния)'},
-    {t:'fix',text:'Исправлено положение кнопок (Пауза и Скорость)'},
-    {t:'fix',text:'Кузница, Таверна и Башня снова ставятся нормально'},
-    {t:'fix',text:'Кнопка "Убрать" теперь работает быстро, как кисть'},
-    {t:'imp',text:'Валуны получили красивую текстуру'}
+  {version:'3.6.0',date:'26.10.2026',title:'Скрытные предатели и гнев небес',changes:[
+    {t:'new',text:'Предатели теперь выглядят как обычные люди, но достают нож каждые 10 секунд'},
+    {t:'new',text:'Предателя можно разоблачить! Если жители рядом - они его атакуют'},
+    {t:'imp',text:'Божественная Кара (молния) стала в 2 раза сильнее'},
+    {t:'new',text:'Возвращена обычная молния (синяя) для точечных ударов'},
+    {t:'fix',text:'Жители больше не стоят в куче (исправлено расталкивание)'},
+    {t:'fix',text:'Исправлено положение кнопки паузы'},
+    {t:'fix',text:'Кузница и Таверна снова строятся без багов'}
   ]}
 ];
 var APP_VERSION=CHANGELOG[0].version;
-var VERSION_KEY='kubiya_version_v19';
+var VERSION_KEY='kubiya_version_v20';
 var CHANGE_META={
   new:{label:'НОВОЕ',color:'#4aff6a',icon:'✨'},
   fix:{label:'ИСПРАВЛЕНО',color:'#ff6a6a',icon:'🔧'},
@@ -90,7 +91,7 @@ var BUILD_LEVELS={
 };
 var BASE_STORAGE={wood:100,stone:50,iron:20,gold:10,diamond:5,emerald:3};
 var WAREHOUSE_CAPACITY=[{wood:150,stone:80,iron:40,gold:20,diamond:10,emerald:5},{wood:300,stone:200,iron:100,gold:50,diamond:25,emerald:12},{wood:500,stone:400,iron:250,gold:100,diamond:60,emerald:30}];
-var SAVE_KEY='kubiya_save_v48',AUTO_SAVE_INTERVAL=6,lastAutoSave=0,saveFlash=0;
+var SAVE_KEY='kubiya_save_v49',AUTO_SAVE_INTERVAL=6,lastAutoSave=0,saveFlash=0;
 
 var WORLD_SIZES=[
   {id:'small',cols:40,rows:30,name:'Остров',desc:'Компактный',ic:'🏝️'},
@@ -129,9 +130,10 @@ var TOOLS_LIFE=[
   {id:'warrior',name:'Воин',bg:'#a83a2a',ic:'⚔️'},
   {id:'troll',name:'Тролли',bg:'#7a5cc9',ic:'👾'},
   {id:'beast',name:'Медведи',bg:'#8a5a2a',ic:'🐻'},
-  {id:'traitor',name:'Предатель',bg:'#2a1a3a',ic:'🗡️'},
+  {id:'traitor',name:'Предатель',bg:'#8a2a2a',ic:'🗡️'},
   {id:'shadow',name:'Тени',bg:'#4a3a6a',ic:'👤'},
-  {id:'bolt',name:'Кара',bg:'#ffaa00',ic:'⚡'},
+  {id:'bolt',name:'Молния',bg:'#4a8eff',ic:'🌩️'},
+  {id:'divine',name:'Кара',bg:'#ffaa00',ic:'⚡'},
   {id:'remove',name:'Убрать',bg:'#5a3a4a',ic:'✖'},
   {id:'rabbit',name:'Кролик',bg:'#8a7a6a',ic:'🐰'},
   {id:'deer',name:'Олень',bg:'#a87848',ic:'🦌'},
@@ -153,7 +155,7 @@ var BEING={
   beast:{clan:2,hp:200,size:11,skin:'#7a4b2a',cloth:'#3a2010',clothDark:'#1a0e05',hair:'#2a1a0a',speed:70,dmg:30,buildType:null,weapon:null},
   shadow:{clan:3,hp:130,size:11,skin:'#4a3a6a',cloth:'#2a1a3a',clothDark:'#0a0515',hair:'#050208',speed:45,dmg:16,buildType:null,weapon:null},
   warrior:{clan:0,hp:90,size:9,skin:'#d8a880',cloth:'#a83a2a',clothDark:'#6a1a10',hair:'#2a1a0a',speed:62,dmg:24,buildType:null,weapon:'sword'},
-  traitor:{clan:4,hp:150,size:9,skin:'#f4dcd0',cloth:'#1a1a1a',clothDark:'#000000',hair:'#f0f0f0',speed:65,dmg:35,buildType:null,weapon:'dagger'}
+  traitor:{clan:4,hp:80,size:8,skin:'#e8c9a0',cloth:'#8a2a2a',clothDark:'#5a1a10',hair:'#3a2418',speed:60,dmg:999,buildType:null,weapon:'dagger'}
 };
 var TREE_TYPES={
   oak:{hp:80,size:17,trunk:'#5a3a2a',c1:'#2a6a2a',c2:'#4a8a3a'},
@@ -363,7 +365,7 @@ var RelaxMus={
   }
 };
 
-var SETTINGS_KEY='kubiya_settings_v8';
+var SETTINGS_KEY='kubiya_settings_v9';
 function readSettings(){try{return JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}');}catch(e){return {};}}
 function writeSettings(s){try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));}catch(e){}}
 function getSetting(k,def){var s=readSettings();return s[k]!==undefined?s[k]:def;}
@@ -661,7 +663,7 @@ function serializeWorld(){
   for(var k in villages){var v=villages[k];vlist.push({id:v.id,name:v.name,clan:v.clan,color:v.color,
     allies:v.allies.slice(),wars:v.wars.slice(),cx:v.cx,cy:v.cy,isKingdom:v.isKingdom,order:v.order||'auto'});}
   return {
-    version:48,savedAt:Date.now(),playTime:playTime,sizeId:selectedSize,
+    version:49,savedAt:Date.now(),playTime:playTime,sizeId:selectedSize,
     COLS:COLS,ROWS:ROWS,biome:currentBiome,camX:camX,camY:camY,zoom:zoom,
     activeTab:activeTab,activeTool:activeTool,cyclePhase:cyclePhase,
     wood:{0:wood[0],1:wood[1]},minerals:Object.assign({},minerals),nextRaidTime:nextRaidTime,
@@ -672,7 +674,8 @@ function serializeWorld(){
       hp:u.hp,maxHp:u.maxHp,size:u.size,skin:u.skin,cloth:u.cloth,clothDark:u.clothDark,hair:u.hair,
       speed:u.speed,dmg:u.dmg,buildType:u.buildType,weapon:u.weapon,wanderA:u.wanderA,wanderT:u.wanderT,
       side:u.side,walkPhase:u.walkPhase,age:u.age,gender:u.gender,isBaby:u.isBaby,growth:u.growth,
-      breedCd:u.breedCd,hunger:u.hunger,raidTarget:u.raidTarget,role:u.role,isLeader:u.isLeader||false};}),
+      breedCd:u.breedCd,hunger:u.hunger,raidTarget:u.raidTarget,role:u.role,isLeader:u.isLeader||false,
+      traitorTimer:u.traitorTimer,isExposed:u.isExposed};}),
     builds:builds.map(function(b){return {x:b.x,y:b.y,type:b.type,level:b.level,hp:b.hp,maxHp:b.maxHp,
       clan:b.clan,villageId:b.villageId,spawnT:b.spawnT,upgradeProg:b.upgradeProg,pop:b.pop,
       construction:b.construction||0,constructionMax:b.constructionMax||0};}),
@@ -719,7 +722,9 @@ function applyLoadedData(d){
       breedCd:u.breedCd,swimming:false,swimTarget:null,drownTime:0,currentAction:'idle',
       hunger:u.hunger===undefined?100:u.hunger,raidTarget:u.raidTarget||null,
       role:u.role||((u.type==='human'||u.type==='troll')?randRole():null),
-      isLeader:u.isLeader||false};});
+      isLeader:u.isLeader||false,
+      traitorTimer:u.traitorTimer||10,
+      isExposed:u.isExposed||false};});
   builds=d.builds.map(function(b){return Object.assign({},b,{flash:0,construction:b.construction||0,constructionMax:b.constructionMax||0});});
   trees=d.trees.map(function(t){return Object.assign({},t,{shake:0,sizeVar:t.sizeVar||1});});
   rocks=(d.rocks||[]).map(function(r){return Object.assign({},r);});
@@ -739,7 +744,7 @@ function applyLoadedData(d){
 }
 function loadWorld(){
   try{var raw=localStorage.getItem(SAVE_KEY);if(!raw)return false;
-    var d=JSON.parse(raw);if(d.version<1||d.version>48)return false;
+    var d=JSON.parse(raw);if(d.version<1||d.version>49)return false;
     applyLoadedData(d);return true;}catch(e){return false;}
 }
 function deleteSave(){try{localStorage.removeItem(SAVE_KEY);}catch(e){}}
@@ -783,7 +788,8 @@ function makeBeing(x,y,type,isBaby,gender,villageId){
     warehouseCd:60+Math.random()*40,wanderA:Math.random()*Math.PI*2,wanderT:0,flash:0,side:1,
     walkPhase:Math.random()*Math.PI*2,age:0,gender:g,isBaby:isBaby,growth:isBaby?0:1,
     breedCd:BREED_COOLDOWN*0.6+Math.random()*5,swimming:false,swimTarget:null,drownTime:0,
-    currentAction:'idle',hunger:100,raidTarget:null,role:role,isLeader:false};
+    currentAction:'idle',hunger:100,raidTarget:null,role:role,isLeader:false,
+    traitorTimer:10,isExposed:false};
   if(!b.villageId&&t.clan<2)assignVillage(b,t.clan,x,y);
   beings.push(b);return b;
 }
@@ -1010,8 +1016,16 @@ function hasNear(x,y,v){
 
 // ═══ БОЙ ═══
 function hostile(a,b){
+  if(a.type==='traitor'&&b.type==='traitor')return false; // Предатели не бьют друг друга
+  if(a.type==='traitor'){
+    if(b.type==='beast'||b.type==='shadow')return true;
+    return true; // Предатель атакует всех жителей
+  }
+  if(b.type==='traitor'){
+    if(a.isExposed)return true; // Атакуют, только если заметили
+    return false;
+  }
   if(a.clan===b.clan){
-    if(a.type==='traitor'||b.type==='traitor')return true;
     if(a.villageId&&b.villageId&&a.villageId!==b.villageId){
       var va=villages[a.villageId],vb=villages[b.villageId];
       if(areAtWar(va,vb))return true;
@@ -1063,49 +1077,51 @@ function generateBoltPath(x1,y1,x2,y2,segments){
   }
   pts.push({x:x2,y:y2});return pts;
 }
-function strikeBolt(x,y,isDivine){
-  if(!isDivine)flashT=0.35;
-  else flashT=0.8; // Божественная кара ярче
-  
-  var sx=x+(Math.random()-0.5)*(isDivine?150:80),sy=camY-60,seg=isDivine?25:(14+Math.floor(Math.random()*8));
+
+// ═══ МОЛНИЯ И БОЖЕСТВЕННАЯ КАРА ═══
+function strikeBolt(x,y,mode){
+  flashT = mode === 'divine' ? 0.8 : 0.35;
+  var sx=x+(Math.random()-0.5)*(mode === 'divine'?150:80),sy=camY-60,seg=mode === 'divine'?25:(14+Math.floor(Math.random()*8));
   var mp=generateBoltPath(sx,sy,x,y,seg);
   
-  if(isDivine){
-    // Золотая/белая божественная кара
+  if(mode === 'divine'){
     bolts.push({path:mp.map(function(p){return {x:p.x,y:p.y};}),life:0.8,maxLife:0.8,color:'rgba(255,230,100,0.7)',width:35,blur:50,blurColor:'#ffdd44'});
     bolts.push({path:mp.map(function(p){return {x:p.x,y:p.y};}),life:0.8,maxLife:0.8,color:'rgba(255,255,200,0.95)',width:15,blur:25,blurColor:'#ffffff'});
     bolts.push({path:mp.map(function(p){return {x:p.x,y:p.y};}),life:0.8,maxLife:0.8,color:'#ffffff',width:5,blur:10,blurColor:'#ffffff'});
   } else {
-    bolts.push({path:mp.map(function(p){return {x:p.x,y:p.y};}),life:0.45,maxLife:0.45,color:'rgba(200,230,255,0.55)',width:12,blur:24,blurColor:'#aaccff'});
-    bolts.push({path:mp.map(function(p){return {x:p.x,y:p.y};}),life:0.45,maxLife:0.45,color:'rgba(230,240,255,0.9)',width:5,blur:12,blurColor:'#ddeeff'});
+    // Обычная синяя молния
+    bolts.push({path:mp.map(function(p){return {x:p.x,y:p.y};}),life:0.45,maxLife:0.45,color:'rgba(150,200,255,0.55)',width:12,blur:24,blurColor:'#aaccff'});
+    bolts.push({path:mp.map(function(p){return {x:p.x,y:p.y};}),life:0.45,maxLife:0.45,color:'rgba(200,230,255,0.9)',width:5,blur:12,blurColor:'#ddeeff'});
     bolts.push({path:mp.map(function(p){return {x:p.x,y:p.y};}),life:0.45,maxLife:0.45,color:'#ffffff',width:2,blur:6,blurColor:'#ffffff'});
   }
 
-  var R=isDivine?200:85;
+  var R = mode === 'divine' ? 250 : 85;
+  var dmgBase = mode === 'divine' ? 999 : 150; // Божественная кара - 999 (ваншот)
+  
   for(var i=0;i<beings.length;i++){
     var u=beings[i];var d=Math.hypot(u.x-x,u.y-y);
     if(d<R){
-      var dmg=isDivine?500:150;
-      u.hp-=dmg*(1-d/R)+(isDivine?100:40);
+      var dmg = dmgBase * (1 - d/R*0.5); 
+      u.hp -= dmg;
       u.flash=0.4;
-      if(isDivine)u.burn=2; // Божественный огонь
+      if(mode === 'divine') u.burn=2;
     }
   }
-  for(var i2=0;i2<builds.length;i2++){var b=builds[i2];var d2=Math.hypot(b.x-x,b.y-y);if(d2<R){b.hp-=(isDivine?300:120)*(1-d2/R)+30;b.flash=0.3;}}
-  for(var i3=0;i3<trees.length;i3++){var t=trees[i3];var d3=Math.hypot(t.x-x,t.y-y);if(d3<R){t.hp-=(isDivine?300:100)*(1-d3/R)+30;t.burn=1.5;}}
-  for(var i4=0;i4<rocks.length;i4++){var r=rocks[i4];var d4=Math.hypot(r.x-x,r.y-y);if(d4<R)r.hp-=(isDivine?300:80)*(1-d4/R)+20;}
-  for(var iA=0;iA<animals.length;iA++){var an=animals[iA];var dA=Math.hypot(an.x-x,an.y-y);if(dA<R)an.hp-=(isDivine?500:100)*(1-dA/R)+30;}
+  for(var i2=0;i2<builds.length;i2++){var b=builds[i2];var d2=Math.hypot(b.x-x,b.y-y);if(d2<R){b.hp-=(mode==='divine'?500:120)*(1-d2/R)+30;b.flash=0.3;}}
+  for(var i3=0;i3<trees.length;i3++){var t=trees[i3];var d3=Math.hypot(t.x-x,t.y-y);if(d3<R){t.hp-=(mode==='divine'?500:100)*(1-d3/R)+30;t.burn=1.5;}}
+  for(var i4=0;i4<rocks.length;i4++){var r=rocks[i4];var d4=Math.hypot(r.x-x,r.y-y);if(d4<R)r.hp-=(mode==='divine'?500:80)*(1-d4/R)+20;}
+  for(var iA=0;iA<animals.length;iA++){var an=animals[iA];var dA=Math.hypot(an.x-x,an.y-y);if(dA<R)an.hp-=(mode==='divine'?500:100)*(1-dA/R)+30;}
   
   var tx0=Math.floor(x/TILE),ty0=Math.floor(y/TILE);
   var cells=[[0,0],[1,0],[-1,0],[0,1],[0,-1]];
-  if(isDivine)cells=[[0,0],[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]];
+  if(mode === 'divine')cells=[[0,0],[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]];
   
   for(var fi=0;fi<cells.length;fi++){
     var nx=tx0+cells[fi][0],ny=ty0+cells[fi][1];
     if(nx<0||nx>=COLS||ny<0||ny>=ROWS)continue;
     var idx=ny*COLS+nx,t2=tiles[idx];
     if(t2!==0&&t2!==3&&t2!==8&&t2!==9)continue;
-    var dur=(isDivine?5:2.5)+Math.random()*1.5;
+    var dur=(mode === 'divine'?5:2.5)+Math.random()*1.5;
     if(burnTimer[idx]<dur){burnTimer[idx]=dur;burnGen[idx]=MAX_BURN_GEN;}
   }
   
@@ -1120,21 +1136,22 @@ function strikeBolt(x,y,isDivine){
     if(madeHole){flowDepth[i5]=0;burnTimer[i5]=0;}
   }
   
-  var sparkN=isDivine?80:35;
+  var sparkN = mode === 'divine' ? 80 : 35;
   for(var si=0;si<sparkN;si++){
     sparks.push({
       x:x, y:y,
       vx:rnd(-400,400), vy:rnd(-400,400),
-      life:isDivine?1.2:0.7, maxLife:isDivine?1.2:0.7,
-      c:isDivine?(Math.random()<0.5?'#ffffff':'#ffdd44'):(Math.random()<0.5?'#f0e05a':'#ffffff'),
-      s:isDivine?5:4
+      life:mode === 'divine'?1.2:0.7, maxLife:mode === 'divine'?1.2:0.7,
+      c:mode === 'divine'?(Math.random()<0.5?'#ffffff':'#ffdd44'):(Math.random()<0.5?'#aaccff':'#ffffff'),
+      s:mode === 'divine'?5:4
     });
   }
   
-  if(isDivine){
+  if(mode === 'divine'){
     hearts.push({x:x,y:y-20,vx:0,vy:-50,life:2,maxLife:2,size:30,color:'#ffdd44'});
   }
 }
+
 function tickBolts(dt){
   for(var i=bolts.length-1;i>=0;i--){bolts[i].life-=dt;if(bolts[i].life<=0)bolts.splice(i,1);}
 }
@@ -1194,7 +1211,7 @@ function spawnBearRaid(){
       plantCd:999,warehouseCd:999,wanderA:Math.random()*Math.PI*2,wanderT:0,flash:0,side:1,
       walkPhase:Math.random()*6.28,age:0,gender:0,isBaby:false,growth:1,breedCd:9999,
       swimming:false,swimTarget:null,drownTime:0,currentAction:'idle',hunger:100,
-      raidTarget:null,role:null,isLeader:false};
+      raidTarget:null,role:null,isLeader:false,traitorTimer:999,isExposed:false};
     var target=klist[Math.floor(Math.random()*klist.length)];
     if(target)bear.raidTarget=target.id;
     beings.push(bear);spawned++;
@@ -1271,6 +1288,62 @@ function tickBeings(dt){
     if(u.isBaby){u.growth+=sdt/BABY_TIME;if(u.growth>=1){u.growth=1;u.isBaby=false;}}
     if(u.breedCd>0)u.breedCd-=sdt*(taverns[u.villageId]?2:1);
     if(u.warehouseCd>0)u.warehouseCd-=sdt;if(u.bldCd>0)u.bldCd-=sdt;
+    
+    // ═══ ПРЕДАТЕЛИ ═══
+    if(u.type==='traitor'){
+      u.traitorTimer -= sdt;
+      if(u.isExposed){
+        u.currentAction = 'betray'; // Будет атакован
+      } else {
+        // Ищет жертву
+        var victim = null;
+        var minD = 150; // Радиус поиска
+        for(var j=0;j<beings.length;j++){
+          var o=beings[j];
+          if(o.type!=='human' && o.type!=='warrior' && o.type!=='troll') continue;
+          if(o.clan === 4) continue; // Не бьет других предателей
+          var d = Math.hypot(o.x-u.x, o.y-u.y);
+          if(d < minD) { minD = d; victim = o; }
+        }
+        
+        if(victim && u.traitorTimer <= 0){
+          // Удар ножом (убийство)
+          victim.hp -= 999;
+          victim.flash = 0.5;
+          u.traitorTimer = 10; // Следующий удар через 10 сек
+          
+          // Проверяем, заметил ли кто-то
+          var noticed = false;
+          for(var j2=0;j2<beings.length;j2++){
+            var w=beings[j2];
+            if(w.type==='human'||w.type==='warrior'||w.type==='troll'){
+              if(Math.hypot(w.x-u.x, w.y-u.y) < 80){ // 80 пикселей - радиус обнаружения
+                noticed = true;
+                break;
+              }
+            }
+          }
+          
+          if(noticed){
+            u.isExposed = true;
+            toast('🚨 Предатель раскрыт!', 2);
+            for(var k2=0;k2<beings.length;k2++){
+              var w2 = beings[k2];
+              if((w2.type==='human'||w2.type==='warrior') && Math.hypot(w2.x-u.x, w2.y-u.y) < 150){
+                w2.currentAction='attack';
+              }
+            }
+          } else {
+            toast('🗡️ Житель убит. Никто не видел.', 2);
+          }
+          
+          // Эффект крови
+          for(var hb=0;hb<5;hb++)hearts.push({x:victim.x+rnd(-10,10),y:victim.y-5,vx:rnd(-30,30),vy:rnd(-50,-10),life:1,maxLife:1,size:6,color:'#ff0000'});
+        }
+      }
+    }
+
+    // Поиск цели для атаки (если предатель раскрыт или обычная вражда)
     var target=null,tDist=Infinity,isBuild=false;
     for(var i2=0;i2<beings.length;i2++){
       var o=beings[i2];if(o===u||!hostile(u,o)||o.swimming)continue;
@@ -1289,6 +1362,7 @@ function tickBeings(dt){
     if(u.villageId&&villages[u.villageId]&&villages[u.villageId].wars.length>0)atWarLong=true;
     var range=atWarLong?4000:(u.type==='beast'?320:200);
     var doing='idle';
+    
     if(target&&tDist<range){
       doing='attack';
       var dx3=target.x-u.x,dy3=target.y-u.y,d5=Math.max(0.01,Math.hypot(dx3,dy3));
@@ -1296,16 +1370,17 @@ function tickBeings(dt){
       if(Math.abs(dx3)>2)u.side=dx3>0?1:-1;
       var hitR=isBuild?u.size+40:u.size+target.size+4;
       if(tDist<hitR&&u.atkCd<=0){
+        // Если это Предатель и его раскрыли - все его бьют, но он тоже бьет
         target.hp-=u.dmg;target.flash=0.15;u.atkCd=0.5;
-        if(u.type==='traitor'){
-          // Предатель оставляет кровавый след
-          for(var hb=0;hb<3;hb++)hearts.push({x:target.x+rnd(-10,10),y:target.y-5,vx:rnd(-20,20),vy:rnd(-30,-10),life:0.8,maxLife:0.8,size:5,color:'#ff0000'});
-        }
       }
     }else if(u.clan===0||u.clan===1){
       var v=u.villageId?villages[u.villageId]:null;
       var order=v?v.order:'auto';
-      if(!u.isLeader&&order&&order!=='auto'){
+      
+      // Если предатель раскрыт, он не занимается обычными делами, а сражается/бежит
+      if(u.type==='traitor' && u.isExposed){
+         doing='attack'; // Уже обрабатывается в блоке target
+      } else if(!u.isLeader&&order&&order!=='auto'){
         if(order==='defend'){
           var ctr=getVillageCenter(v.id);
           if(ctr){
@@ -1397,7 +1472,8 @@ function tickBeings(dt){
           continue;
         }
       }
-      var canBreed=!u.isBaby&&u.breedCd<=0&&popCount[u.clan]<popCap[u.clan]&&u.type!=='warrior';
+      
+      var canBreed=!u.isBaby&&u.breedCd<=0&&popCount[u.clan]<popCap[u.clan]&&u.type!=='warrior'&&u.type!=='traitor';
       if(canBreed){
         var partner=findPartner(u);
         if(partner){
@@ -1520,6 +1596,7 @@ function tickBeings(dt){
         if(Math.abs(u.vx)>5)u.side=u.vx>0?1:-1;
       }
     }else{
+      // Животные/Тени/Медведи
       if(u.raidTarget&&villages[u.raidTarget]){
         doing='raid';
         var rv=villages[u.raidTarget];
@@ -1533,6 +1610,7 @@ function tickBeings(dt){
       }
       if(Math.abs(u.vx)>5)u.side=u.vx>0?1:-1;
     }
+    
     if(doing!=='chop'&&doing!=='breed'&&doing!=='mine'){
       var nx2=u.x+u.vx*sdt,ny2=u.y+u.vy*sdt,blocked=false;
       for(var i8=0;i8<trees.length;i8++){var t4=trees[i8];
@@ -1547,17 +1625,21 @@ function tickBeings(dt){
       if(!blocked&&walkable(u.x,ny2))u.y=ny2;
       else if(doing!=='walk_to_tree'&&doing!=='walk_to_mine')u.wanderA+=Math.PI*0.7;
     }
+    
+    // Расталкивание (не толпятся в куче)
     for(var i10=0;i10<beings.length;i10++){
       var o2=beings[i10];if(o2===u||u.swimming||o2.swimming)continue;
       var dx8=o2.x-u.x,dy8=o2.y-u.y,d12=Math.hypot(dx8,dy8);
-      var minD=(u.size+o2.size)*(u.isBaby?0.6:1);
-      if(d12<minD&&d12>0.01){var push=(minD-d12)*0.5;u.x-=dx8/d12*push*0.4;u.y-=dy8/d12*push*0.4;}
+      var minD=(u.size+o2.size)*1.5; // Чуть больше дистанция
+      if(d12<minD&&d12>0.01){var push=(minD-d12)*0.5;u.x-=dx8/d12*push*0.6;u.y-=dy8/d12*push*0.6;}
     }
+    
     u.x=cl(u.x,4,WORLD_W-4);u.y=cl(u.y,4,WORLD_H-4);
     if(u.atkCd>0)u.atkCd-=sdt;if(u.flash>0)u.flash-=sdt;
     if(Math.hypot(u.vx,u.vy)>5)u.walkPhase+=sdt*12;
     u.currentAction=doing;
-    if(!u.isLeader&&u.age>=5&&u.bldCd<=0&&(u.currentAction==='wander'||u.currentAction==='idle')&&u.villageId){
+    
+    if(!u.isLeader&&u.age>=5&&u.bldCd<=0&&(u.currentAction==='wander'||u.currentAction==='idle')&&u.villageId&&u.type!=='traitor'){
       var vN=villages[u.villageId];
       if(vN&&vN.order==='auto'){
         var counts={cottage:0,tent:0,warehouse:0,forge:0,tavern:0,tower:0};
@@ -1950,40 +2032,23 @@ function drawPickaxeTool(s){ctx.fillStyle='#8a5a2a';ctx.fillRect(-s*0.045,-s*0.5
 function drawSwordTool(s){ctx.fillStyle='#d8d8e0';ctx.beginPath();ctx.moveTo(0,-s*1.28);ctx.lineTo(-s*0.08,-s*1.1);ctx.lineTo(-s*0.08,s*0.14);ctx.lineTo(s*0.08,s*0.14);ctx.lineTo(s*0.08,-s*1.1);ctx.closePath();ctx.fill();ctx.fillStyle='#3a3a42';ctx.fillRect(-s*0.24,s*0.13,s*0.48,s*0.08);}
 
 function drawDaggerTool(s){
-  // Изогнутый нож с золотой рукоятью и узорами (как на фото)
   ctx.save();
-  // Клинок
   var g = ctx.createLinearGradient(-s*0.1, -s*1.2, s*0.1, s*0.2);
-  g.addColorStop(0, '#e0e0e8');
-  g.addColorStop(0.5, '#a8a8b2');
-  g.addColorStop(1, '#6a6a74');
+  g.addColorStop(0, '#e0e0e8'); g.addColorStop(0.5, '#a8a8b2'); g.addColorStop(1, '#6a6a74');
   ctx.fillStyle = g;
   ctx.beginPath();
-  ctx.moveTo(0, -s*1.3); // Острие
-  ctx.quadraticCurveTo(s*0.15, -s*1.0, s*0.12, -s*0.5); // Правая сторона
+  ctx.moveTo(0, -s*1.3);
+  ctx.quadraticCurveTo(s*0.15, -s*1.0, s*0.12, -s*0.5);
   ctx.lineTo(s*0.08, s*0.1);
   ctx.lineTo(-s*0.08, s*0.1);
-  ctx.lineTo(-s*0.12, -s*0.5); // Левая сторона
-  ctx.quadraticCurveTo(-s*0.05, -s*1.0, 0, -s*1.3); // Изгиб
+  ctx.lineTo(-s*0.12, -s*0.5);
+  ctx.quadraticCurveTo(-s*0.05, -s*1.0, 0, -s*1.3);
   ctx.fill();
-  
-  // Дол (кровосток)
-  ctx.strokeStyle = '#3a3a42';
-  ctx.lineWidth = s*0.03;
-  ctx.beginPath();
-  ctx.moveTo(0, -s*0.9);
-  ctx.lineTo(0, -s*0.2);
-  ctx.stroke();
-
-  // Гарда
-  ctx.fillStyle = '#c8a018';
-  ctx.fillRect(-s*0.2, s*0.05, s*0.4, s*0.08);
-  
-  // Рукоять (дерево)
+  ctx.strokeStyle = '#3a3a42'; ctx.lineWidth = s*0.03;
+  ctx.beginPath(); ctx.moveTo(0, -s*0.9); ctx.lineTo(0, -s*0.2); ctx.stroke();
+  ctx.fillStyle = '#c8a018'; ctx.fillRect(-s*0.2, s*0.05, s*0.4, s*0.08);
   var hg = ctx.createLinearGradient(-s*0.08, s*0.1, s*0.08, s*0.6);
-  hg.addColorStop(0, '#6a3a1a');
-  hg.addColorStop(0.5, '#8a4a2a');
-  hg.addColorStop(1, '#4a2a10');
+  hg.addColorStop(0, '#6a3a1a'); hg.addColorStop(0.5, '#8a4a2a'); hg.addColorStop(1, '#4a2a10');
   ctx.fillStyle = hg;
   ctx.beginPath();
   ctx.moveTo(-s*0.08, s*0.1);
@@ -1991,13 +2056,8 @@ function drawDaggerTool(s){
   ctx.lineTo(s*0.12, s*0.6);
   ctx.quadraticCurveTo(s*0.05, s*0.4, s*0.08, s*0.1);
   ctx.fill();
-  
-  // Навершие (золото)
   ctx.fillStyle = '#c8a018';
-  ctx.beginPath();
-  ctx.ellipse(0, s*0.65, s*0.15, s*0.08, 0, 0, Math.PI*2);
-  ctx.fill();
-
+  ctx.beginPath(); ctx.ellipse(0, s*0.65, s*0.15, s*0.08, 0, 0, Math.PI*2); ctx.fill();
   ctx.restore();
 }
 
@@ -2008,7 +2068,7 @@ function drawToolInHand(u,s){
   else if(a==='chop'||a==='walk_to_tree')t='axe';
   else if(a==='mine'||a==='walk_to_mine')t='pickaxe';
   else if(a==='attack'||a==='hunt')t='sword';
-  else if(u.type==='traitor')t='dagger'; // Предатель всегда с ножом
+  else if(u.type==='traitor')t='dagger';
   else return;
 
   var hx=s*0.4+s*0.05,hy=-s*1.05+s*0.08+s*0.85*0.85;
@@ -2108,87 +2168,25 @@ function paintTraitor(u){
   var wc=isM?Math.sin(u.walkPhase):0,wc2=isM?Math.sin(u.walkPhase+Math.PI):0;
   var bob=isM?Math.abs(Math.sin(u.walkPhase*2))*s*0.03:0;
 
-  // Тень
   ctx.fillStyle='rgba(0,0,0,0.5)';
   ctx.beginPath();ctx.ellipse(u.x,u.y+s*0.95,s*1.15,s*0.35,0,0,Math.PI*2);ctx.fill();
   
   ctx.save();ctx.translate(u.x,u.y);if(u.side<0)ctx.scale(-1,1);
   ctx.translate(0,-bob);
   
-  // Ноги (черные сапоги)
-  ctx.fillStyle=fl?'#fff':'#1a1a1a';
-  ctx.beginPath();ctx.ellipse(-s*0.18+wc2*s*0.1,s*0.95,s*0.18,s*0.15,0,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.ellipse(s*0.15+wc*s*0.1,s*0.95,s*0.18,s*0.15,0,0,Math.PI*2);ctx.fill();
-
-  // Плащ (черный)
-  ctx.fillStyle=fl?'#fff':'#0a0a0a';
-  ctx.beginPath();ctx.moveTo(-s*0.7,-s*1.05);ctx.quadraticCurveTo(-s*0.85,s*0.1,-s*0.65,s*0.7);ctx.lineTo(s*0.65,s*0.7);ctx.quadraticCurveTo(s*0.85,s*0.1,s*0.7,-s*1.05);ctx.closePath();ctx.fill();
+  // Предатель выглядит как обычный житель, но с ножом!
+  paintMaleBody(u,s,fl);
   
-  // Камзол (черный бархат)
-  var shoulderY=-s*1.05;
-  ctx.fillStyle=fl?'#fff':'#1a1a1a';
-  ctx.beginPath();ctx.moveTo(-s*0.42,shoulderY);ctx.quadraticCurveTo(-s*0.48,shoulderY+s*0.4,-s*0.4,s*0.75);ctx.lineTo(s*0.4,s*0.75);ctx.quadraticCurveTo(s*0.48,shoulderY+s*0.4,s*0.42,shoulderY);ctx.closePath();ctx.fill();
-
-  // Золотые пуговицы
-  if(!fl){
-    ctx.fillStyle='#ffd700';
-    for(var i=0;i<4;i++){
-      ctx.beginPath();
-      ctx.arc(0, shoulderY+s*0.1 + i*s*0.15, s*0.03, 0, Math.PI*2);
-      ctx.fill();
-    }
+  // Если предатель раскрыт, рисуем над ним знак
+  if(u.isExposed){
+    ctx.fillStyle='#ff0000';
+    ctx.font='bold 16px -apple-system,sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText('!', 0, -s*2.5);
   }
-
-  // Белый кружевной воротник
-  ctx.fillStyle=fl?'#fff':'#f0f0f0';
-  ctx.beginPath();ctx.moveTo(-s*0.15,shoulderY);ctx.lineTo(0,shoulderY+s*0.15);ctx.lineTo(s*0.15,shoulderY);ctx.fill();
-
-  // Голова (бледная кожа)
-  var hcy=shoulderY-s*0.48,hw=s*0.72,hh=s*0.78;
-  var hg=ctx.createRadialGradient(-hw*0.15,hcy-hh*0.15,1,0,hcy,hw*0.6);
-  hg.addColorStop(0,fl?'#fff':'#ffffff');
-  hg.addColorStop(0.55,fl?'#fff':'#f4dcd0');
-  hg.addColorStop(1,fl?'#fff':'#d8b8a8');
-  ctx.fillStyle=hg;
-  ctx.beginPath();ctx.ellipse(0,hcy,hw*0.5,hh*0.5,0,0,Math.PI*2);ctx.fill();
-
-  // Белый парик с локонами (как на фото)
-  ctx.fillStyle=fl?'#fff':'#ffffff';
-  ctx.beginPath();
-  ctx.arc(0, hcy - s*0.1, s*0.45, Math.PI*0.8, Math.PI*2.2);
-  ctx.fill();
-  // Локоны по бокам
-  ctx.beginPath();ctx.arc(-s*0.4, hcy - s*0.1, s*0.15, 0, Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.arc(s*0.4, hcy - s*0.1, s*0.15, 0, Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.arc(-s*0.45, hcy + s*0.1, s*0.12, 0, Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.arc(s*0.45, hcy + s*0.1, s*0.12, 0, Math.PI*2);ctx.fill();
-
-  // Глаза (жестокие)
-  ctx.fillStyle='#fff';
-  ctx.beginPath();
-  ctx.ellipse(s*0.08, hcy - s*0.02, s*0.07, s*0.09, 0, 0, Math.PI*2);
-  ctx.ellipse(s*0.25, hcy - s*0.02, s*0.08, s*0.1, 0, 0, Math.PI*2);
-  ctx.fill();
-  
-  ctx.fillStyle=fl?'#fff':'#2a1408';
-  ctx.beginPath();
-  ctx.arc(s*0.1, hcy - s*0.01, s*0.035, 0, Math.PI*2);
-  ctx.arc(s*0.27, hcy - s*0.01, s*0.04, 0, Math.PI*2);
-  ctx.fill();
-
-  // Злая ухмылка
-  ctx.strokeStyle='#5a2a1a';ctx.lineWidth=s*0.03;
-  ctx.beginPath();
-  ctx.moveTo(s*0.12, hcy + s*0.22);
-  ctx.quadraticCurveTo(s*0.18, hcy + s*0.26, s*0.26, hcy + s*0.2);
-  ctx.stroke();
-  
-  // Нож в руке
-  drawToolInHand(u,s);
 
   ctx.restore();
 
-  // Аура предательства (красная)
   if(u.hp<u.maxHp){
     var bw=s*2,bh=3,bx=u.x-bw/2,by=u.y-s*2.25;
     ctx.fillStyle='rgba(0,0,0,0.75)';ctx.fillRect(bx-1,by-1,bw+2,bh+2);
@@ -2808,11 +2806,9 @@ function paintTree(t){
 function paintRock(r){
   var s = r.size, hp = r.hp / r.maxHp;
   
-  // Тень
   ctx.fillStyle = 'rgba(0,0,0,0.45)';
   ctx.beginPath(); ctx.ellipse(r.x, r.y + s * 0.4, s * 0.9, s * 0.4, 0, 0, Math.PI * 2); ctx.fill();
 
-  // Основа камня (многогранник)
   var bg = ctx.createLinearGradient(r.x - s * 0.6, r.y - s * 0.6, r.x + s * 0.6, r.y + s * 0.6);
   bg.addColorStop(0, '#b0b0b8');
   bg.addColorStop(0.4, '#8a8a92');
@@ -2831,7 +2827,6 @@ function paintRock(r){
   ctx.closePath();
   ctx.fill();
   
-  // Блик сверху
   ctx.fillStyle = 'rgba(255,255,255,0.25)';
   ctx.beginPath();
   ctx.moveTo(r.x - s * 0.5, r.y - s * 0.4);
@@ -2841,7 +2836,6 @@ function paintRock(r){
   ctx.closePath();
   ctx.fill();
 
-  // Трещины/текстура
   ctx.strokeStyle = 'rgba(0,0,0,0.3)';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
@@ -2855,7 +2849,6 @@ function paintRock(r){
   ctx.lineTo(r.x + s * 0.3, r.y - s * 0.1);
   ctx.stroke();
 
-  // Мох (если камень старый)
   if (r.seed > 0.5) {
     ctx.fillStyle = 'rgba(80, 160, 60, 0.4)';
     ctx.beginPath();
@@ -2864,7 +2857,6 @@ function paintRock(r){
     ctx.fill();
   }
 
-  // Полоска здоровья (если поврежден)
   if (r.hp < r.maxHp) {
     var bw = s * 1.2, bh = 2.5, bx = r.x - bw / 2, by = r.y - s * 0.9;
     ctx.fillStyle = 'rgba(0,0,0,0.7)';
@@ -3535,7 +3527,7 @@ function renderInspectPanel(){
   if(inspected.type==='being'){
     var u=obj;
     var cc=u.clan===0?'#3a8ee6':u.clan===1?'#7a5cc9':u.clan===2?'#8a5a2a':'#4a3a6a';
-    if(u.type==='traitor')cc='#1a1a1a';
+    if(u.type==='traitor')cc='#8a2a2a';
     var v=villages[u.villageId];
     ctx.fillStyle=cc;ctx.beginPath();ctx.arc(cx+9,cy,9,0,Math.PI*2);ctx.fill();
     ctx.strokeStyle=v?v.color:'#fff';ctx.lineWidth=2;
@@ -4541,7 +4533,8 @@ function useTool(px,py){
   else if(activeTool==='beast')makeBeing(px,py,'beast',false,null);
   else if(activeTool==='traitor')makeBeing(px,py,'traitor',false,null);
   else if(activeTool==='shadow')makeBeing(px,py,'shadow',false,null);
-  else if(activeTool==='bolt')strikeBolt(px,py,true);
+  else if(activeTool==='bolt')strikeBolt(px,py,'normal');
+  else if(activeTool==='divine')strikeBolt(px,py,'divine');
 }
 function ensureToolValid(){
   var tl=getTools(),ok=false;
@@ -4887,7 +4880,7 @@ window.addEventListener('resize',function(){setTimeout(function(){initCanvas();b
 window.addEventListener('orientationchange',function(){setTimeout(function(){initCanvas();boundCamera();},200);});
 requestAnimationFrame(loop);
 
-try{document.title='Кубия 3.5';}catch(e){}
+try{document.title='Кубия 3.6';}catch(e){}
 </script>
 </body>
 </html>
